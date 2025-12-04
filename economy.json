@@ -1,35 +1,38 @@
 {
     "users": {
         "765420562968477727": {
-            "balance": 961,
+            "balance": 1045,
             "inventory": {
                 "Birch": 0,
                 "Mahogany": 0,
                 "Willow": 0,
                 "Oak": 0,
                 "Redwood": 0,
-                "Chunk of Stone": 0
+                "Chunk of Stone": 0,
+                "Chunk of Iron": 0,
+                "Chunk of Coal": 1,
+                "Chunk of Copper": 1
             },
             "currentAxe": "Iron Axe",
             "currentAxeIndex": 1,
             "currentPickaxeIndex": 0,
             "currentPickaxe": "Starter Pick",
-            "lastChop": 1764888485141,
-            "lastMine": 1764888114708
+            "lastChop": 1764889991575,
+            "lastMine": 1764889994399
         },
         "471040517082447882": {
-            "balance": 365,
+            "balance": 0,
             "inventory": {
-                "Oak": 4,
-                "Redwood": 1,
-                "Willow": 1,
+                "Oak": 8,
+                "Redwood": 0,
+                "Willow": 8,
                 "Birch": 0
             },
-            "currentAxe": "Starter Axe",
-            "currentAxeIndex": 0,
+            "currentAxe": "Iron Axe",
+            "currentAxeIndex": 1,
             "currentPickaxeIndex": 0,
             "currentPickaxe": "Starter Pick",
-            "lastChop": 1764888587276
+            "lastChop": 1764888848678
         }
     }
 }

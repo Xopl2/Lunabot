@@ -54,6 +54,35 @@ const MINE_DROPS = [
     { name: "Chunk of Adamantite", emoji: "💎", rarity: 0.0005, price: 1000 } // 0.05% Legendary
 ];
 
+// Define the forged bars (UNSELLABLE)
+const FORGED_BARS = [
+    { name: "Gold Bar", emoji: "🪙" },
+    { name: "Cobalt Bar", emoji: "💙" },
+    { name: "Adamantite Bar", emoji: "💎" }
+];
+
+// Smelting recipes: Input (Ore) -> Output (Bar) - NOW REQUIRES COAL
+const FORGE_RECIPES = [
+    {
+        input: { name: "Chunk of Gold", quantity: 5 },
+        fuel: { name: "Chunk of Coal", quantity: 5 }, // Added Coal Requirement
+        output: { name: "Gold Bar", quantity: 1 },
+        id: "goldbar"
+    },
+    {
+        input: { name: "Chunk of Cobalt", quantity: 5 },
+        fuel: { name: "Chunk of Coal", quantity: 5 }, // Added Coal Requirement
+        output: { name: "Cobalt Bar", quantity: 1 },
+        id: "cobaltbar"
+    },
+    {
+        input: { name: "Chunk of Adamantite", quantity: 5 },
+        fuel: { name: "Chunk of Coal", quantity: 5 }, // Added Coal Requirement
+        output: { name: "Adamantite Bar", quantity: 1 },
+        id: "adamantitebar"
+    }
+];
+
 // Combine all sellable items for universal lookup
 const ALL_SELLABLE_ITEMS = [...WOOD_TYPES, ...MINE_DROPS];
 
@@ -266,8 +295,8 @@ client.on('messageCreate', async message => {
         ensureUserExists(message.author.id, data);
         const userData = data.users[message.author.id];
 
-        // Cooldown check (5 seconds)
-        const cooldown = 5000;
+        // Cooldown check (3 seconds)
+        const cooldown = 3000;
         const now = Date.now();
         if (now - userData.lastChop < cooldown) {
             const timeRemaining = ((userData.lastChop + cooldown - now) / 1000).toFixed(1);
@@ -315,8 +344,8 @@ client.on('messageCreate', async message => {
         ensureUserExists(userId, data);
         const userData = data.users[userId];
 
-        // Cooldown check (5 seconds)
-        const cooldown = 5000;
+        // Cooldown check (3 seconds)
+        const cooldown = 3000;
         const now = Date.now();
         if (now - userData.lastMine < cooldown) {
             const timeRemaining = ((userData.lastMine + cooldown - now) / 1000).toFixed(1);
@@ -364,14 +393,13 @@ client.on('messageCreate', async message => {
         ensureUserExists(message.author.id, data);
         const inventory = data.users[message.author.id].inventory;
 
-        // Use the new combined list for emoji lookup
-        const ALL_ITEMS = ALL_SELLABLE_ITEMS;
+        const ALL_ITEMS_FOR_INV = [...ALL_SELLABLE_ITEMS, ...FORGED_BARS]; 
 
         const invEntries = Object.entries(inventory)
             .filter(([name, count]) => count > 0)
             .map(([name, count]) => {
                 // Lookup in combined list
-                const item = ALL_ITEMS.find(i => i.name === name);
+                const item = ALL_ITEMS_FOR_INV.find(i => i.name === name);
                 const emoji = item ? item.emoji : '❓';
                 return `${emoji} **${name}**: ${count}`;
             });
@@ -420,46 +448,45 @@ client.on('messageCreate', async message => {
     }
 
     // !sell <item> command (Sells a specific stack of ANY item)
-    if (message.content.toLowerCase().startsWith('!sell ')) {
-        const itemToSellInput = message.content.slice(6).trim(); // Extract the item name
-        
-        if (!itemToSellInput) {
-            return message.reply('Please specify the item you want to sell (e.g., `!sell oak` or `!sell gold`).');
-        }
+    if (message.content.toLowerCase().startsWith('!sell ')) {
+        const itemToSellInput = message.content.slice(6).trim().toLowerCase(); // Extract the item name
+        
+        if (!itemToSellInput) {
+            return message.reply('Please specify the item you want to sell (e.g., `!sell oak` or `!sell gold`).');
+        }
 
-        const data = loadEconomyData();
-        ensureUserExists(message.author.id, data);
-        const userData = data.users[message.author.id];
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const userData = data.users[message.author.id];
 
-        // 1. Find the item in the ALL_SELLABLE_ITEMS list (to get its properties)
-        // We use the full list to allow selling ANY item.
-        const itemFound = ALL_SELLABLE_ITEMS.find(item => 
-            // Check if the input starts with the item name OR is the exact item name (for easy selling)
-            item.name.toLowerCase().startsWith(itemToSellInput.toLowerCase()) || 
-            item.name.toLowerCase() === itemToSellInput.toLowerCase()
-        );
-        
-        if (!itemFound) {
-            return message.reply(`❌ I don't recognize the item **${itemToSellInput}**. Use \`!inv\` to check your inventory.`);
-        }
+        // 1. Find the item in the ALL_SELLABLE_ITEMS list (FIXED LOOKUP)
+        // This allows for partial or single-word matches like 'stone' matching 'Chunk of Stone'.
+        const itemFound = ALL_SELLABLE_ITEMS.find(item => 
+            // If the full item name includes the user's input (best for multi-word items)
+            item.name.toLowerCase().includes(itemToSellInput)
+        );
+        
+        if (!itemFound) {
+            return message.reply(`❌ I don't recognize the item **${itemToSellInput}**. Use \`!inv\` to check your inventory, nya.`);
+        }
 
-        // 2. Check inventory count
-        const itemName = itemFound.name;
-        const count = userData.inventory[itemName] || 0;
+        // 2. Check inventory count
+        const itemName = itemFound.name;
+        const count = userData.inventory[itemName] || 0;
 
-        if (count === 0) {
-            return message.reply(`🤷 You do not have any **${itemName}** to sell.`);
-        }
+        if (count === 0) {
+            return message.reply(`🤷 You do not have any **${itemName}** to sell.`);
+        }
 
-        // 3. Calculate Revenue, Update Balance, and Clear Inventory
-        const revenue = count * itemFound.price;
-        userData.balance += revenue;
-        userData.inventory[itemName] = 0; // Clear the stock
+        // 3. Calculate Revenue, Update Balance, and Clear Inventory
+        const revenue = count * itemFound.price;
+        userData.balance += revenue;
+        userData.inventory[itemName] = 0; // Clear the stock
 
-        saveEconomyData(data);
+        saveEconomyData(data);
 
-        message.reply(`💰 Sold **${count}x ${itemName}** ${itemFound.emoji} for **$${revenue}**! New Balance: **$${userData.balance}**.`);
-    }
+        message.reply(`💰 Sold **${count}x ${itemName}** ${itemFound.emoji} for **$${revenue}**! New Balance: **$${userData.balance}**.`);
+    }
 
     // !bal command
     if (message.content === '!bal') {
@@ -485,7 +512,7 @@ client.on('messageCreate', async message => {
             .slice(0, 10); // Take the top 10
 
         if (sortedUsers.length === 0) {
-            return message.reply('The leaderboard is empty! Get chopping!');
+            return message.reply('The leaderboard is empty! Get to work!');
         }
 
         const leaderboardText = sortedUsers.map((user, index) => {
@@ -498,7 +525,7 @@ client.on('messageCreate', async message => {
             return `${rankEmoji} **#${rank}** - ${username}: **$${user.balance}**`;
         }).join('\n');
 
-        message.reply(`🏆 **Top 10 Lumberjacks by Wealth**\n---\n${leaderboardText}`);
+        message.reply(`🏆 **Top 10 Degens by Wealth**\n---\n${leaderboardText}`);
     }
 
     // !shop command (Refactored for both Axes and Pickaxes)
@@ -617,6 +644,72 @@ client.on('messageCreate', async message => {
 
         message.reply(`🥳 **PURCHASE SUCCESSFUL!** You bought the **${itemToBuy.name}**! Your drops are now **${itemToBuy.multiplier}x**. Current Balance: **$${userData.balance}**.`);
     }
+
+    // !forge <recipe_id> command 
+    if (message.content.toLowerCase().startsWith('!forge')) { 
+        
+        // Slice to get the argument, removing '!forge' and trimming spaces
+        const args = message.content.slice('!forge'.length).trim().toLowerCase(); 
+        
+        if (!args) { // User only typed !forge (no arguments)
+            let recipeList = FORGE_RECIPES.map(r => 
+                `**${r.id}**: ${r.input.quantity}x ${r.input.name} + ${r.fuel.quantity}x ${r.fuel.name}`
+            ).join(', ');
+            return message.reply(`🔥 **LUNA'S FORGE** 🔥\n---\nTo forge, use \`!forge <recipe_id>\`. Available recipes:\n${recipeList}`);
+        }
+
+        const recipeInput = args; // The argument (recipe ID) is now clean
+        
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const userData = data.users[message.author.id];
+
+        // 1. Find the recipe
+        const recipe = FORGE_RECIPES.find(r => r.id === recipeInput);
+        
+        if (!recipe) {
+            return message.reply(`❌ Invalid forge recipe ID. Use \`!forge\` to see available recipes, nya.`);
+        }
+
+        const inputOreName = recipe.input.name;
+        const inputOreRequired = recipe.input.quantity;
+        const fuelName = recipe.fuel.name;
+        const fuelRequired = recipe.fuel.quantity;
+        
+        const outputItemName = recipe.output.name;
+        const outputQuantity = recipe.output.quantity;
+        
+        const currentOreCount = userData.inventory[inputOreName] || 0;
+        const currentFuelCount = userData.inventory[fuelName] || 0;
+
+        // 2. Check required materials (Ore)
+        if (currentOreCount < inputOreRequired) {
+            return message.reply(`📉 You need **${inputOreRequired}x ${inputOreName}** (Ore) to forge, but you only have **${currentOreCount}**.`);
+        }
+        
+        // 3. Check required fuel (Coal)
+        if (currentFuelCount < fuelRequired) {
+            return message.reply(`📉 You also need **${fuelRequired}x ${fuelName}** (Fuel) to fire the forge, but you only have **${currentFuelCount}**.`);
+        }
+
+        // 4. SUCCESS: Process the forge
+        
+        // Deduct materials (Ore)
+        userData.inventory[inputOreName] = currentOreCount - inputOreRequired;
+        
+        // Deduct fuel (Coal)
+        userData.inventory[fuelName] = currentFuelCount - fuelRequired;
+        
+        // Add bar to inventory
+        userData.inventory[outputItemName] = (userData.inventory[outputItemName] || 0) + outputQuantity;
+        
+        saveEconomyData(data);
+
+        // Find the emoji for the response
+        const outputEmoji = FORGED_BARS.find(b => b.name === outputItemName)?.emoji || '✨';
+
+        message.reply(`✅ **FORGED SUCCESS!** Used ${inputOreRequired}x ${inputOreName} and ${fuelRequired}x ${fuelName} to create **${outputQuantity}x ${outputItemName}** ${outputEmoji}!`);
+    }
 });
 
 // Log in
