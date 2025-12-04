@@ -38,7 +38,8 @@ const WOOD_TYPES = [
     { name: "Birch", emoji: "🌲", rarity: 0.1000, price: 25 },     // 10.00% Uncommon
     { name: "Redwood", emoji: "🍁", rarity: 0.0800, price: 50 },    // 8.00% Uncommon
     { name: "Mahogany", emoji: "🪵", rarity: 0.0190, price: 100 },  // 1.90% Rare
-    { name: "Ancient Log", emoji: "🪓", rarity: 0.0009, price: 250 }, // 0.09% Ultra Rare
+    { name: "Ancient Log", emoji: "🪓", rarity: 0.0007, price: 250 }, // 0.09% Ultra Rare
+    { name: "Ghost log", emoji: "👻", rarity: 0.0002, price: 250 }, // 0.02% Super Rare
     { name: "Petrified Log", emoji: "💎", rarity: 0.0001, price: 5000 } // 0.01% Legendary
 ];
 
