@@ -1,0 +1,24 @@
+{
+    "users": {
+        "765420562968477727": {
+            "balance": 940,
+            "inventory": {
+                "Birch": 0,
+                "Mahogany": 0,
+                "Willow": 0,
+                "Oak": 0,
+                "Redwood": 0
+            },
+            "currentAxe": "Iron Axe"
+        },
+        "471040517082447882": {
+            "balance": 70,
+            "inventory": {
+                "Oak": 0,
+                "Redwood": 0,
+                "Willow": 0
+            },
+            "currentAxe": "Starter"
+        }
+    }
+}
