@@ -8,6 +8,8 @@ luna - a prefix that gets luna to respond to any prompt you want
 -- economy commands -- 
 
 !lunachop - chop some wood to sell
+!lunamine - mine some ores to sell
+!sell - sell an individual item
 !sellall - sell your inventory
 !inv - view your inventory
 !bal - view your balance
