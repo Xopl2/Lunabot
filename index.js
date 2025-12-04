@@ -43,11 +43,34 @@ const WOOD_TYPES = [
     { name: "Petrified Log", emoji: "💎", rarity: 0.0001, price: 5000 } // 0.01% Legendary
 ];
 
-// Define Axe Upgrades and their multipliers
-const AXE_UPGRADES = [
-    { id: 'Iron Axe', name: 'Iron Axe', price: 500, multiplier: 2, required: 'Starter' },
-    { id: 'Steel Axe', name: 'Steel Axe', price: 2000, multiplier: 3, required: 'Iron Axe' },
-    { id: 'Diamond Axe', name: 'Diamond Axe', price: 5000, multiplier: 5, required: 'Steel Axe' }
+// Define mining drops and their sell prices (7 TIERS)
+const MINE_DROPS = [
+    { name: "Chunk of Stone", emoji: "🪨", rarity: 0.7870, price: 1 },     // 78.70% (Fills the rest)
+    { name: "Chunk of Coal", emoji: "⚫", rarity: 0.1000, price: 5 },      // 10.00% Common
+    { name: "Chunk of Copper", emoji: "🟠", rarity: 0.0500, price: 15 },     // 5.00% Uncommon
+    { name: "Chunk of Iron", emoji: "🔩", rarity: 0.0500, price: 30 },     // 5.00% Uncommon
+    { name: "Chunk of Gold", emoji: "🟡", rarity: 0.0100 , price: 75 },      // 1.00% Rare
+    { name: "Chunk of Cobalt", emoji: "🔵", rarity: 0.0025, price: 200 },   // 0.25% Ultra Rare
+    { name: "Chunk of Adamantite", emoji: "💎", rarity: 0.0005, price: 1000 } // 0.05% Legendary
+];
+
+// Combine all sellable items for universal lookup
+const ALL_SELLABLE_ITEMS = [...WOOD_TYPES, ...MINE_DROPS];
+
+// Define Axe Tiers (Starter, Iron, Steel, Diamond)
+const AXE_TIERS = [
+    { id: "starter", name: "Starter Axe", multiplier: 1, price: 0, emoji: "🪓" }, 
+    { id: "iron", name: "Iron Axe", multiplier: 2, price: 500, emoji: "🔩" },
+    { id: "steel", name: "Steel Axe", multiplier: 3, price: 2000, emoji: "⚙️" },
+    { id: "diamond", name: "Diamond Axe", multiplier: 5, price: 5000, emoji: "💎" }
+];
+
+// Define Pickaxe Tiers (Starter, Iron, Steel, Diamond)
+const PICKAXE_TIERS = [
+    { id: "starter_pick", name: "Starter Pick", multiplier: 1, price: 0, emoji: "⛏️" }, 
+    { id: "iron_pick", name: "Iron Pickaxe", multiplier: 2, price: 1000, emoji: "🔩" },
+    { id: "steel_pick", name: "Steel Pickaxe", multiplier: 3, price: 2500, emoji: "⚙️" },
+    { id: "diamond_pick", name: "Diamond Pickaxe", multiplier: 5, price: 5000, emoji: "💎" }
 ];
 
 // Helper function to load all user data from the JSON file
@@ -79,363 +102,523 @@ function ensureUserExists(userId, data) {
         data.users[userId] = {
             balance: 0,
             inventory: {},
-            currentAxe: 'Starter' // Default starting axe
+            currentAxe: 'Starter Axe', // Renamed from 'Starter' for consistency
+            currentAxeIndex: 0, // Track Axe progression by index
+            currentPickaxe: 'Starter Pick', // Added pickaxe
+            currentPickaxeIndex: 0, // Track Pickaxe progression by index
+            lastChop: 0, // For cooldown
+            lastMine: 0, // For cooldown
         };
     }
+    // Ensure older users get new defaults
+    if (data.users[userId].currentAxeIndex === undefined) data.users[userId].currentAxeIndex = AXE_TIERS.findIndex(a => a.name === (data.users[userId].currentAxe ?? 'Starter Axe'));
+    if (data.users[userId].currentPickaxeIndex === undefined) data.users[userId].currentPickaxeIndex = 0;
+    if (data.users[userId].currentPickaxe === undefined) data.users[userId].currentPickaxe = 'Starter Pick';
 }
 
 client.on('messageCreate', async message => {
-    // Ignore messages from bots
-    if (message.author.bot) return;
+    // Ignore messages from bots
+    if (message.author.bot) return;
 
-    // Ping command
-    if (message.content === '!ping') {
-        message.reply('Pong!');      
-    }
+    // Ping command
+    if (message.content === '!ping') {
+        message.reply('Pong!');      
+    }
 
-    // Gucci Lobster responder with 1% chance
-    const targetUserId = '471040517082447882';
-    if (message.author.id === targetUserId) {
-        if (Math.random() < 0.01) { // 1% chance
-           message.channel.send(`<@${targetUserId}> 🍊🐔`);
+    // Gucci Lobster responder with 1% chance
+    const targetUserId = '471040517082447882';
+    if (message.author.id === targetUserId) {
+        if (Math.random() < 0.01) { // 1% chance
+           message.channel.send(`<@${targetUserId}> 🍊🐔`);
+        }
+    }
+
+    // Poop command
+    if (message.content === '!poop') {
+        message.reply('💩');
+    }
+
+    // indigo ike debt command
+    if (message.content === '!indigodebt') {
+        const initialDebt = 23.25; // starting debt
+        const dailyRate = 0.025; // 2.5% daily interest
+        const startDate = new Date('2025-12-01'); // debt start date
+        const today = new Date();
+
+        // Calculate the number of full days since startDate
+        const diffTime = today - startDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // Compound interest formula: A = P * (1 + r)^n
+        // Using Math.pow(1 + dailyRate, diffDays)
+        const totalDebt = initialDebt * Math.pow(1 + dailyRate, diffDays);
+
+        // Format to 2 decimal places
+        const formattedDebt = totalDebt.toFixed(2);
+
+        message.reply(`Indigo Ike's debt to Gucci_Lobster has compounded to $${formattedDebt} 💸 over ${diffDays} days at 2.5% daily interest.`);
+    }
+
+    // --- Hey AI command (FINAL VERSION with 50-Message Memory & Self-Reply) ---
+    if (message.content.toLowerCase().startsWith('luna ')) {
+        // 1. Extract the raw user text (the current prompt)
+        const rawPrompt = message.content.slice(5).trim(); 
+
+        // 2. Define the Neko Girl Persona and System Instruction
+        const systemInstruction = "You are a cheerful Neko girl (cat-girl) named Luna. You must respond to all user requests in character, ending all responses with a meow, cat sound, or a cheerful, Neko-like exclamation (e.g., 'Nya~', 'Meow!', 'Purr...'). Keep responses concise. Respond in under 1950 characters.";
+        
+        // --- IMPORTANT: Get the bot's own ID for filtering ---
+        const lunaBotId = message.client.user.id; 
+
+        try {
+            await message.channel.sendTyping();
+
+            // --- FETCH MESSAGE HISTORY (The Memory Logic) ---
+            const messages = await message.channel.messages.fetch({ limit: 100 });
+
+            // Filter: 1. Current command 2. Other bots' messages 3. All commands 
+            const history = messages.filter(m => {
+                // Check 1: Exclude the current command message
+                if (m.id === message.id) return false;
+                
+                // Check 2: Exclude messages from other bots (unless it's Luna herself)
+                if (m.author.bot && m.author.id !== lunaBotId) return false; 
+                
+                // Check 3: Exclude all economy/ping commands
+                if (m.content.startsWith('!')) return false; 
+                if (m.content.startsWith('m!')) return false; 
+                if (m.content.startsWith('@')) return false;
+
+                // Check 4: Exclude previous 'luna' prompts
+                if (m.content.toLowerCase().startsWith('luna')) return false;
+                
+                //exclude a few types of links
+                const contentLower = m.content.toLowerCase();
+                if (contentLower.includes('http://') || contentLower.includes('https://') || contentLower.includes('www.')) return false;
+                
+                return true;
+            });
+
+            // Map the history into the Gemini API 'contents' format: [{ role, parts: [{ text }] }]
+            const conversationHistory = history.reverse().map(m => {
+                // If the author is Luna's ID, the role must be 'model'.
+                const role = (m.author.id === lunaBotId) ? 'model' : 'user';
+                
+                // Format the text to include the author's username for clarity
+                const formattedText = `[${m.author.username}]: ${m.content}`;
+                
+                return {
+                    role: role,
+                    parts: [{ text: formattedText }]
+                };
+            });
+
+            // 4. Construct the full contents array for the API call
+            const contents = [
+                ...conversationHistory,
+                { role: "user", parts: [{ text: rawPrompt }] }
+            ];
+
+            // --- API CALL ---
+            const response = await clientGemini.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: contents,
+                config: {
+                    systemInstruction: systemInstruction,
+                    temperature: 0.85,
+                    maxOutputTokens: 2048, 
+                },
+                timeout: 60000 
+            });
+
+            const responseText = response.text; 
+
+            // 5. Safety Check and Truncation
+            if (!responseText) {
+                console.error('Gemini response blocked:', response.candidates?.[0]?.finishReason);
+                return message.reply(`❌ I couldn't answer that, nya. The response may have been blocked by safety filters.`);
+            }
+            
+            if (responseText.length > 2000) {
+                const truncatedResponse = responseText.substring(0, 1950) + '\n\n... (Response Truncated to fit Discord limit)';
+                message.reply(truncatedResponse);
+            } else {
+                message.reply(responseText);
+            }
+
+        } catch (err) {
+            console.error('--- GEMINI API / NETWORK ERROR ---');
+            console.error(err);
+            
+            let userMessage = '❌ Something went wrong with the AI response, meow!';
+            if (err.message && (err.message.includes('timeout') || err.message.includes('socket hang up'))) {
+                userMessage = '⚠️ The AI took too long to respond and the request timed out. Please try a shorter query, nya.';
+            }
+            message.reply(userMessage);
+        }
+    }
+
+    // --- ECONOMY COMMANDS ---
+
+    // !lunachop command
+    if (message.content === '!lunachop') {
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const userData = data.users[message.author.id];
+
+        // Cooldown check (5 seconds)
+        const cooldown = 5000;
+        const now = Date.now();
+        if (now - userData.lastChop < cooldown) {
+            const timeRemaining = ((userData.lastChop + cooldown - now) / 1000).toFixed(1);
+            return message.reply(`Slow down, meow! You need to wait **${timeRemaining}s** before chopping again!`);
         }
-    }
+        userData.lastChop = now; // Set new cooldown time
 
-    // Poop command
-    if (message.content === '!poop') {
-        message.reply('💩');
-    }
+        // Use the index for the current axe tier
+        const axeInfo = AXE_TIERS[userData.currentAxeIndex] || AXE_TIERS[0];
+        const multiplier = axeInfo.multiplier;
+        const axeDisplayName = axeInfo.name;
 
-    // indigo ike debt command
-    if (message.content === '!indigodebt') {
-        const initialDebt = 23.25; // starting debt
-        const dailyRate = 0.025; // 2.5% daily interest
-        const startDate = new Date('2025-12-01'); // debt start date
-        const today = new Date();
+        // Logic to determine which wood type is found
+        const roll = Math.random();
+        let cumulativeRarity = 0;
+        let foundWood = null;
 
-        // Calculate the number of full days since startDate
-        const diffTime = today - startDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        for (const wood of WOOD_TYPES) {
+            cumulativeRarity += wood.rarity;
+            if (roll <= cumulativeRarity) {
+                foundWood = wood;
+                break;
+            }
+        }
 
-        // Compound interest formula: A = P * (1 + r)^n
-        // Using Math.pow(1 + dailyRate, diffDays)
-        const totalDebt = initialDebt * Math.pow(1 + dailyRate, diffDays);
+        if (!foundWood) {
+            foundWood = WOOD_TYPES[0]; // Default to Oak if no wood found
+        }
+        
+        // Calculate final drops using the multiplier (always at least 1)
+        const drops = multiplier; 
 
-        // Format to 2 decimal places
-        const formattedDebt = totalDebt.toFixed(2);
+        // Add drops to the user's inventory
+        userData.inventory[foundWood.name] = (userData.inventory[foundWood.name] || 0) + drops;
 
-        message.reply(`Indigo Ike's debt to Gucci_Lobster has compounded to $${formattedDebt} 💸 over ${diffDays} days at 2.5% daily interest.`);
-    }
+        saveEconomyData(data);
+        
+        message.reply(`🪓 **${axeDisplayName}** chop! You found **${drops}x ${foundWood.name}** ${foundWood.emoji}!`);
+    }
 
-    // --- Hey AI command (FINAL VERSION with 50-Message Memory & Self-Reply) ---
-    if (message.content.toLowerCase().startsWith('luna ')) {
-        // 1. Extract the raw user text (the current prompt)
-        const rawPrompt = message.content.slice(7).trim();
+    // --- !lunamine Command (Fixed) ---
+    if (message.content.toLowerCase() === '!lunamine') {
+        const userId = message.author.id;
+        const data = loadEconomyData();
+        ensureUserExists(userId, data);
+        const userData = data.users[userId];
 
-        // 2. Define the Neko Girl Persona and System Instruction
-        const systemInstruction = "You are a cheerful Neko girl (cat-girl) named Luna. You must respond to all user requests in character, ending all responses with a meow, cat sound, or a cheerful, Neko-like exclamation (e.g., 'Nya~', 'Meow!', 'Purr...'). Keep responses concise. Respond in under 1950 characters.";
+        // Cooldown check (5 seconds)
+        const cooldown = 5000;
+        const now = Date.now();
+        if (now - userData.lastMine < cooldown) {
+            const timeRemaining = ((userData.lastMine + cooldown - now) / 1000).toFixed(1);
+            return message.reply(`Slow down, nya! You need to wait **${timeRemaining}s** before mining again!`);
+        }
+        userData.lastMine = now; // Set new cooldown time
+        
+        // Use the index for the current pickaxe tier
+        const currentPickaxe = PICKAXE_TIERS[userData.currentPickaxeIndex];
+        
+        // 1. Determine the Drop (Rarity Logic)
+        const roll = Math.random(); 
+        let cumulativeRarity = 0;
+        let selectedDrop = null;
+
+        for (const drop of MINE_DROPS) {
+            cumulativeRarity += drop.rarity;
+            if (roll <= cumulativeRarity) {
+                selectedDrop = drop;
+                break; 
+            }
+        }
+
+        if (!selectedDrop) {
+            selectedDrop = MINE_DROPS[0]; 
+        }
+
+        // 2. Apply Multiplier for Quantity
+        const amount = currentPickaxe.multiplier;
+        
+        // 3. Update the User's Inventory
+        const itemName = selectedDrop.name;
+        userData.inventory[itemName] = (userData.inventory[itemName] || 0) + amount;
+
+        // 4. Save the data
+        saveEconomyData(data);
+
+        // 5. Send the confirmation message
+        message.reply(`⛏️ **${currentPickaxe.name}** mine! You found **${amount}x** ${selectedDrop.name} ${selectedDrop.emoji}!`);
+    }
+
+    // !inv command (Fixed for all items)
+    if (message.content === '!inv') {
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const inventory = data.users[message.author.id].inventory;
+
+        // Use the new combined list for emoji lookup
+        const ALL_ITEMS = ALL_SELLABLE_ITEMS;
+
+        const invEntries = Object.entries(inventory)
+            .filter(([name, count]) => count > 0)
+            .map(([name, count]) => {
+                // Lookup in combined list
+                const item = ALL_ITEMS.find(i => i.name === name);
+                const emoji = item ? item.emoji : '❓';
+                return `${emoji} **${name}**: ${count}`;
+            });
+
+        if (invEntries.length === 0) {
+            return message.reply(`🎒 Your inventory is empty! Use \`!lunachop\` or \`!lunamine\` to gather items.`);
+        }
+
+        const invText = invEntries.join('\n');
+        message.reply(`🎒 **${message.author.username}'s Inventory**\n---\n${invText}`);
+    }
+
+    // !sellall command (Fixed for all items)
+    if (message.content === '!sellall') {
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const userData = data.users[message.author.id];
+        let totalRevenue = 0;
+        let soldItems = [];
         
-        // --- IMPORTANT: Get the bot's own ID for filtering ---
-        const lunaBotId = message.client.user.id; 
+        // Use the new combined list for selling
+        const ALL_SELLABLE_ITEMS = [...WOOD_TYPES, ...MINE_DROPS];
+        
+        for (const item of ALL_SELLABLE_ITEMS) {
+            const count = userData.inventory[item.name] || 0;
+            if (count > 0) {
+                const revenue = count * item.price;
+                totalRevenue += revenue;
+                soldItems.push(`${item.emoji} ${item.name} (${count}) for $${revenue}`);
+                
+                // Clear the inventory count
+                userData.inventory[item.name] = 0;
+            }
+        }
 
-        try {
-            await message.channel.sendTyping();
+        if (totalRevenue === 0) {
+            return message.reply('🤷 You have no items to sell!');
+        }
 
-            // --- FETCH MESSAGE HISTORY (The Memory Logic) ---
-            const messages = await message.channel.messages.fetch({ limit: 100 });
+        // Update user's balance
+        userData.balance += totalRevenue;
+        saveEconomyData(data);
 
-            // Filter: 1. Current command 2. Other bots' messages 3. All commands 
-            const history = messages.filter(m => {
-                // Check 1: Exclude the current command message
-                if (m.id === message.id) return false;
-                
-                // Check 2: Exclude messages from other bots (unless it's Luna herself)
-                if (m.author.bot && m.author.id !== lunaBotId) return false; 
-                
-                // Check 3: Exclude all economy/ping commands
-                if (m.content.startsWith('!')) return false; 
-                if (m.content.startsWith('m!')) return false; 
-                if (m.content.startsWith('@')) return false;
+        const soldText = soldItems.join('\n');
+        message.reply(`💰 **SOLD ALL!** You earned **$${totalRevenue}**.\n\nItems Sold:\n${soldText}\n\nNew Balance: **$${userData.balance}**`);
+    }
 
-                // Check 4: Exclude previous 'hey ai' prompts
-                if (m.content.toLowerCase().startsWith('hey ai')) return false;
-                
-                //exclude a few types of links
-                const contentLower = m.content.toLowerCase();
-                if (contentLower.includes('http://') || contentLower.includes('https://') || contentLower.includes('www.')) return false;
-                
-                return true;
-            });
+    // !sell <item> command (Sells a specific stack of ANY item)
+    if (message.content.toLowerCase().startsWith('!sell ')) {
+        const itemToSellInput = message.content.slice(6).trim(); // Extract the item name
+        
+        if (!itemToSellInput) {
+            return message.reply('Please specify the item you want to sell (e.g., `!sell oak` or `!sell gold`).');
+        }
 
-            // Map the history into the Gemini API 'contents' format: [{ role, parts: [{ text }] }]
-            const conversationHistory = history.reverse().map(m => {
-                // If the author is Luna's ID, the role must be 'model'.
-                // This tells the AI: "This is what YOU said before."
-                const role = (m.author.id === lunaBotId) ? 'model' : 'user';
-                
-                // Format the text to include the author's username for clarity
-                // Note: Luna's own username will appear here, which is helpful for context
-                const formattedText = `[${m.author.username}]: ${m.content}`;
-                
-                return {
-                    role: role,
-                    parts: [{ text: formattedText }]
-                };
-            });
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const userData = data.users[message.author.id];
 
-            // 4. Construct the full contents array for the API call
-            const contents = [
-                ...conversationHistory,
-                { role: "user", parts: [{ text: rawPrompt }] }
-            ];
+        // 1. Find the item in the ALL_SELLABLE_ITEMS list (to get its properties)
+        // We use the full list to allow selling ANY item.
+        const itemFound = ALL_SELLABLE_ITEMS.find(item => 
+            // Check if the input starts with the item name OR is the exact item name (for easy selling)
+            item.name.toLowerCase().startsWith(itemToSellInput.toLowerCase()) || 
+            item.name.toLowerCase() === itemToSellInput.toLowerCase()
+        );
+        
+        if (!itemFound) {
+            return message.reply(`❌ I don't recognize the item **${itemToSellInput}**. Use \`!inv\` to check your inventory.`);
+        }
 
-            // --- API CALL ---
-            const response = await clientGemini.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: contents,
-                config: {
-                    systemInstruction: systemInstruction,
-                    temperature: 0.85,
-                    maxOutputTokens: 2048, 
-                },
-                timeout: 60000 
-            });
+        // 2. Check inventory count
+        const itemName = itemFound.name;
+        const count = userData.inventory[itemName] || 0;
 
-            const responseText = response.text; 
+        if (count === 0) {
+            return message.reply(`🤷 You do not have any **${itemName}** to sell.`);
+        }
 
-            // 5. Safety Check and Truncation
-            if (!responseText) {
-                console.error('Gemini response blocked:', response.candidates?.[0]?.finishReason);
-                return message.reply(`❌ I couldn't answer that, nya. The response may have been blocked by safety filters.`);
-            }
-            
-            if (responseText.length > 2000) {
-                const truncatedResponse = responseText.substring(0, 1950) + '\n\n... (Response Truncated to fit Discord limit)';
-                message.reply(truncatedResponse);
+        // 3. Calculate Revenue, Update Balance, and Clear Inventory
+        const revenue = count * itemFound.price;
+        userData.balance += revenue;
+        userData.inventory[itemName] = 0; // Clear the stock
+
+        saveEconomyData(data);
+
+        message.reply(`💰 Sold **${count}x ${itemName}** ${itemFound.emoji} for **$${revenue}**! New Balance: **$${userData.balance}**.`);
+    }
+
+    // !bal command
+    if (message.content === '!bal') {
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const balance = data.users[message.author.id].balance;
+
+        message.reply(`💵 Your current balance is **$${balance}**.`);
+    }
+
+    // !leaderboard command
+    if (message.content === '!leaderboard') {
+        const data = loadEconomyData();
+        
+        // Convert users object to an array for sorting and filtering
+        const sortedUsers = Object.entries(data.users)
+            .map(([id, user]) => ({
+                id,
+                balance: user.balance
+            }))
+            .filter(user => user.balance > 0) // Only show users with money
+            .sort((a, b) => b.balance - a.balance) // Sort by balance descending
+            .slice(0, 10); // Take the top 10
+
+        if (sortedUsers.length === 0) {
+            return message.reply('The leaderboard is empty! Get chopping!');
+        }
+
+        const leaderboardText = sortedUsers.map((user, index) => {
+            const rank = index + 1;
+            const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '🔹';
+            
+            // Try to find the username from the cache, fallback to the ID
+            const username = client.users.cache.get(user.id)?.username || `User ID: ${user.id}`;
+            
+            return `${rankEmoji} **#${rank}** - ${username}: **$${user.balance}**`;
+        }).join('\n');
+
+        message.reply(`🏆 **Top 10 Lumberjacks by Wealth**\n---\n${leaderboardText}`);
+    }
+
+    // !shop command (Refactored for both Axes and Pickaxes)
+    if (message.content === '!shop') {
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const userData = data.users[message.author.id];
+        
+        let shopText = '🌲 **Axe Upgrades Shop** ⛏️\n---\n';
+        
+        // AXE SHOP SECTION
+        const currentAxeIndex = userData.currentAxeIndex;
+        let nextAxe = AXE_TIERS[currentAxeIndex + 1];
+        
+        shopText += '**Axes**\n';
+        AXE_TIERS.forEach((axe, index) => {
+            let status = '';
+            if (index < currentAxeIndex) {
+                status = '✅ OWNED';
+            } else if (index === currentAxeIndex) {
+                status = '✅ EQUIPPED';
+            } else if (index === currentAxeIndex + 1) {
+                status = `💰 $${axe.price}`;
             } else {
-                message.reply(responseText);
+                status = '🔒 LOCKED';
             }
-
-        } catch (err) {
-            console.error('--- GEMINI API / NETWORK ERROR ---');
-            console.error(err);
-            
-            let userMessage = '❌ Something went wrong with the AI response, meow!';
-            if (err.message && (err.message.includes('timeout') || err.message.includes('socket hang up'))) {
-                userMessage = '⚠️ The AI took too long to respond and the request timed out. Please try a shorter query, nya.';
-            }
-            message.reply(userMessage);
-        }
-    }
-
-    // --- ECONOMY COMMANDS ---
-
-    // !lunachop command
-    if (message.content === '!lunachop') {
-        const data = loadEconomyData();
-        ensureUserExists(message.author.id, data);
-        const userData = data.users[message.author.id];
-
-        // 1. Get the current axe type, defaulting to 'Starter' for old users
-        const currentAxeType = userData.currentAxe ?? 'Starter'; 
-
-        // Determine multiplier
-        const axeInfo = AXE_UPGRADES.find(a => a.name === currentAxeType) || { multiplier: 1 };
-        const multiplier = axeInfo.multiplier;
-
-        // 2. Determine the display name for the chat
-        const axeDisplayName = (currentAxeType === 'Starter') ? 'Basic Axe' : currentAxeType;
-
-        // Logic to determine which wood type is found
-        const roll = Math.random();
-        let cumulativeRarity = 0;
-        let foundWood = null;
-
-        for (const wood of WOOD_TYPES) {
-            cumulativeRarity += wood.rarity;
-            if (roll <= cumulativeRarity) {
-                foundWood = wood;
-                break;
-            }
-        }
-
-        if (!foundWood) {
-            foundWood = WOOD_TYPES[0];
-        }
-        
-        // Calculate final drops using the multiplier (always at least 1)
-        const drops = Math.max(1, multiplier); 
-
-        // Add drops to the user's inventory
-        userData.inventory[foundWood.name] = (userData.inventory[foundWood.name] || 0) + drops;
-
-        saveEconomyData(data);
-        
-        // 3. Use the new display name
-        message.reply(`🪓 **${axeDisplayName}** chop! You found **${drops}x ${foundWood.name}** ${foundWood.emoji}!`);
-    }
-
-    // !inv command
-    if (message.content === '!inv') {
-        const data = loadEconomyData();
-        ensureUserExists(message.author.id, data);
-        const inventory = data.users[message.author.id].inventory;
-
-        const invEntries = Object.entries(inventory)
-            .filter(([name, count]) => count > 0)
-            .map(([name, count]) => {
-                const wood = WOOD_TYPES.find(w => w.name === name);
-                const emoji = wood ? wood.emoji : '❓';
-                return `${emoji} **${name}**: ${count}`;
-            });
-
-        if (invEntries.length === 0) {
-            return message.reply(`🎒 Your inventory is empty! Use \`!lunachop\` to gather wood.`);
-        }
-
-        const invText = invEntries.join('\n');
-        message.reply(`🎒 **${message.author.username}'s Inventory**\n---\n${invText}`);
-    }
-
-    // !sellall command
-    if (message.content === '!sellall') {
-        const data = loadEconomyData();
-        ensureUserExists(message.author.id, data);
-        const userData = data.users[message.author.id];
-        let totalRevenue = 0;
-        let soldItems = [];
-        
-        // Loop through all wood types and check inventory
-        for (const wood of WOOD_TYPES) {
-            const count = userData.inventory[wood.name] || 0;
-            if (count > 0) {
-                const revenue = count * wood.price;
-                totalRevenue += revenue;
-                soldItems.push(`${wood.emoji} ${wood.name} (${count}) for $${revenue}`);
-                
-                // Clear the inventory count
-                userData.inventory[wood.name] = 0;
-            }
-        }
-
-        if (totalRevenue === 0) {
-            return message.reply('🤷 You have no wood to sell!');
-        }
-
-        // Update user's balance
-        userData.balance += totalRevenue;
-        saveEconomyData(data);
-
-        const soldText = soldItems.join('\n');
-        message.reply(`💰 **SOLD!** You earned **$${totalRevenue}**.\n\nItems Sold:\n${soldText}\n\nNew Balance: **$${userData.balance}**`);
-    }
-
-    // !bal command
-    if (message.content === '!bal') {
-        const data = loadEconomyData();
-        ensureUserExists(message.author.id, data);
-        const balance = data.users[message.author.id].balance;
-
-        message.reply(`💵 Your current balance is **$${balance}**.`);
-    }
-
-    // !leaderboard command
-    if (message.content === '!leaderboard') {
-        const data = loadEconomyData();
-        
-        // Convert users object to an array for sorting and filtering
-        const sortedUsers = Object.entries(data.users)
-            .map(([id, user]) => ({
-                id,
-                balance: user.balance
-            }))
-            .filter(user => user.balance > 0) // Only show users with money
-            .sort((a, b) => b.balance - a.balance) // Sort by balance descending
-            .slice(0, 10); // Take the top 10
-
-        if (sortedUsers.length === 0) {
-            return message.reply('The leaderboard is empty! Get chopping!');
-        }
-
-        const leaderboardText = sortedUsers.map((user, index) => {
-            const rank = index + 1;
-            const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '🔹';
-            
-            // Try to find the username from the cache, fallback to the ID
-            const username = client.users.cache.get(user.id)?.username || `User ID: ${user.id}`;
-            
-            return `${rankEmoji} **#${rank}** - ${username}: **$${user.balance}**`;
-        }).join('\n');
-
-        message.reply(`🏆 **Top 10 Lumberjacks by Wealth**\n---\n${leaderboardText}`);
-    }
-
-    // !shop command
-    if (message.content === '!shop') {
-        const data = loadEconomyData();
-        ensureUserExists(message.author.id, data);
-        const currentAxe = data.users[message.author.id].currentAxe;
-
-        let shopText = 'Axe Upgrades Shop:\n---\n';
-        let availableUpgrade = null;
-
-        for (const axe of AXE_UPGRADES) {
-            const isBought = axe.name === currentAxe || AXE_UPGRADES.findIndex(a => a.name === currentAxe) >= AXE_UPGRADES.findIndex(a => a.name === axe.required);
-            
-            // Find the next available upgrade
-            if (axe.required === currentAxe || (axe.required === 'Starter' && currentAxe === 'Starter')) {
-                availableUpgrade = axe;
-            }
-
-            const status = (axe.name === currentAxe) ? '✅ EQUIPPED' : 
-                        (availableUpgrade && axe.id === availableUpgrade.id) ? `💰 $${axe.price}` : 
-                        '🔒 LOCKED';
-            
             shopText += `**[${axe.id}] ${axe.name}** | ${axe.multiplier}x Drops | Status: ${status}\n`;
-        }
+        });
 
-        shopText += `\nTo purchase the next available axe, use \`!buy ${availableUpgrade ? availableUpgrade.id : '...'} \``;
+        // PICKAXE SHOP SECTION
+        shopText += '\n**Pickaxes**\n';
+        const currentPickaxeIndex = userData.currentPickaxeIndex;
+        let nextPickaxe = PICKAXE_TIERS[currentPickaxeIndex + 1];
 
-        message.reply(shopText);
-    }
-
-    // !buy <item> command
-    if (message.content.toLowerCase().startsWith('!buy ')) {
-        const userInputName = message.content.slice(5).trim();
+        PICKAXE_TIERS.forEach((pick, index) => {
+            let status = '';
+            if (index < currentPickaxeIndex) {
+                status = '✅ OWNED';
+            } else if (index === currentPickaxeIndex) {
+                status = '✅ EQUIPPED';
+            } else if (index === currentPickaxeIndex + 1) {
+                status = `💰 $${pick.price}`;
+            } else {
+                status = '🔒 LOCKED';
+            }
+            shopText += `**[${pick.id}] ${pick.name}** | ${pick.multiplier}x Drops | Status: ${status}\n`;
+        });
         
-        const data = loadEconomyData();
-        ensureUserExists(message.author.id, data);
-        const userData = data.users[message.author.id];
+        // Determine which ID to show for the next example buy command
+        const nextBuyId = (nextAxe || nextPickaxe)?.id || AXE_TIERS[1].id;
+        shopText += `\nTo purchase an upgrade, use \`!buy <item_id>\` (e.g., \`!buy ${nextBuyId}\`)`;
+
+        message.reply(shopText);
+    }
+
+    // !buy <item> command (Refactored for both Axes and Pickaxes)
+    if (message.content.toLowerCase().startsWith('!buy ')) {
+        const userInputId = message.content.slice(5).trim().toLowerCase();
+        
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const userData = data.users[message.author.id];
+        
+        let itemToBuy, itemType, currentItemIndex, itemTiers;
+
+        // 1. Determine if it's an Axe or a Pickaxe
+        itemToBuy = AXE_TIERS.find(a => a.id === userInputId);
+        if (itemToBuy) {
+            itemType = 'Axe';
+            itemTiers = AXE_TIERS;
+            currentItemIndex = userData.currentAxeIndex;
+        } else {
+            itemToBuy = PICKAXE_TIERS.find(p => p.id === userInputId);
+            if (itemToBuy) {
+                itemType = 'Pickaxe';
+                itemTiers = PICKAXE_TIERS;
+                currentItemIndex = userData.currentPickaxeIndex;
+            }
+        }
         
-        const itemToBuy = AXE_UPGRADES.find(a => a.id.toLowerCase() === userInputName.toLowerCase());
+        if (!itemToBuy) {
+            return message.reply('❌ Invalid item ID. Use `!shop` to see available items.');
+        }
 
-        if (!itemToBuy) {
-            return message.reply('❌ Invalid item name. Use `!shop` to see available axes.');
+        // 2. Check for progression (must be the next tier up)
+        const itemIndex = itemTiers.findIndex(i => i.id === userInputId);
+        
+        if (itemIndex === currentItemIndex) {
+            return message.reply(`✅ You already own and are equipped with the **${itemToBuy.name}**!`);
+        }
+        if (itemIndex < currentItemIndex) {
+            return message.reply(`✅ You already own a better ${itemType}, the **${itemTiers[currentItemIndex].name}**!`);
+        }
+        if (itemIndex > currentItemIndex + 1) {
+            const requiredItem = itemTiers[currentItemIndex + 1];
+            return message.reply(`🔒 You must first purchase the **${requiredItem.name}** before you can buy the **${itemToBuy.name}**.`);
         }
 
-        // Check if the user already has this item (or a better one)
-        if (userData.currentAxe === itemToBuy.name) {
-            return message.reply(`✅ You already own the **${itemToBuy.name}**!`);
+        // 3. Check balance
+        if (userData.balance < itemToBuy.price) {
+            return message.reply(`💵 You need **$${itemToBuy.price}** to buy the **${itemToBuy.name}**, but you only have **$${userData.balance}**.`);
+        }
+
+        // 4. SUCCESS: Deduct money and update tool
+        userData.balance -= itemToBuy.price;
+        
+        if (itemType === 'Axe') {
+            userData.currentAxe = itemToBuy.name;
+            userData.currentAxeIndex = itemIndex;
+        } else if (itemType === 'Pickaxe') {
+            userData.currentPickaxe = itemToBuy.name;
+            userData.currentPickaxeIndex = itemIndex;
         }
 
-        // If the required axe is 'Starter', this check is skipped, allowing the purchase.
-        if (itemToBuy.required !== 'Starter' && itemToBuy.required !== userData.currentAxe) {
-            return message.reply(`🔒 You must first purchase the **${itemToBuy.required}** before you can buy the **${itemToBuy.name}**.`);
-        }
+        saveEconomyData(data);
 
-        // Check balance
-        if (userData.balance < itemToBuy.price) {
-            return message.reply(`💵 You need **$${itemToBuy.price}** to buy the **${itemToBuy.name}**, but you only have **$${userData.balance}**.`);
-        }
-
-        // SUCCESS: Deduct money and update axe
-        userData.balance -= itemToBuy.price;
-        userData.currentAxe = itemToBuy.name;
-        saveEconomyData(data);
-
-        message.reply(`🥳 **PURCHASE SUCCESSFUL!** You bought the **${itemToBuy.name}**! Your drops are now **${itemToBuy.multiplier}x**. Current Balance: **$${userData.balance}**.`);
-    }
+        message.reply(`🥳 **PURCHASE SUCCESSFUL!** You bought the **${itemToBuy.name}**! Your drops are now **${itemToBuy.multiplier}x**. Current Balance: **$${userData.balance}**.`);
+    }
 });
 
 // Log in
 client.login(process.env.DISCORD_TOKEN);
+
