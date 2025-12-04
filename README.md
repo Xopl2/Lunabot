@@ -16,6 +16,7 @@ luna - a prefix that gets luna to respond to any prompt you want
 !leaderboard - view the leaderboard of all lumberjacks
 !shop - open the shop for upgrades
 !buy () - buys an upgrade from the shop
+!forge - a forge for smelting your ores into bars (for upgrades)
 
 -- other commands --
 
