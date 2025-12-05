@@ -14,6 +14,7 @@ luna - a prefix that gets luna to respond to any prompt you want
 !inv - view your inventory
 !bal - view your balance
 !leaderboard - view the leaderboard of all lumberjacks
+!stats - display your statistics
 !shop - open the shop for upgrades
 !buy () - buys an upgrade from the shop
 !forge - a forge for smelting your ores into bars (for upgrades)
