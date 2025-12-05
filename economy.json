@@ -1,7 +1,7 @@
 {
     "users": {
         "765420562968477727": {
-            "balance": 1045,
+            "balance": 17989,
             "inventory": {
                 "Birch": 0,
                 "Mahogany": 0,
@@ -10,29 +10,53 @@
                 "Redwood": 0,
                 "Chunk of Stone": 0,
                 "Chunk of Iron": 0,
-                "Chunk of Coal": 1,
-                "Chunk of Copper": 1
+                "Chunk of Coal": 0,
+                "Chunk of Copper": 0,
+                "Ancient Log": 0
             },
-            "currentAxe": "Iron Axe",
-            "currentAxeIndex": 1,
-            "currentPickaxeIndex": 0,
-            "currentPickaxe": "Starter Pick",
-            "lastChop": 1764889991575,
-            "lastMine": 1764889994399
+            "lastChop": 1764917997063,
+            "lastMine": 1764916475012,
+            "tool_axe": {
+                "id": "starter_axe",
+                "name": "Starter Axe",
+                "multiplier": 1,
+                "price": 0,
+                "emoji": "🪓"
+            },
+            "tool_pickaxe": {
+                "id": "starter_pick",
+                "name": "Starter Pick",
+                "multiplier": 1,
+                "price": 0,
+                "emoji": "⛏️"
+            }
         },
         "471040517082447882": {
-            "balance": 0,
+            "balance": 390,
             "inventory": {
-                "Oak": 8,
+                "Oak": 0,
                 "Redwood": 0,
-                "Willow": 8,
+                "Willow": 0,
                 "Birch": 0
             },
             "currentAxe": "Iron Axe",
             "currentAxeIndex": 1,
             "currentPickaxeIndex": 0,
             "currentPickaxe": "Starter Pick",
-            "lastChop": 1764888848678
+            "lastChop": 1764912519428
+        },
+        "671091203697147954": {
+            "balance": 0,
+            "inventory": {
+                "Oak": 1,
+                "Birch": 1
+            },
+            "currentAxe": "Starter Axe",
+            "currentAxeIndex": 0,
+            "currentPickaxe": "Starter Pick",
+            "currentPickaxeIndex": 0,
+            "lastChop": 1764908415749,
+            "lastMine": 0
         }
     }
 }
