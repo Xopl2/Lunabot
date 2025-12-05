@@ -6,8 +6,7 @@ const { Client, GatewayIntentBits, Events, PermissionFlagsBits } = require('disc
 
 // 2. Database Imports
 const mongoose = require('mongoose');
-const User = require('./User'); // Adjust path if you put User.js in a folder
-// Ensure your AXE_TIERS and PICKAXE_TIERS are also imported/defined here
+const User = require('./User');
 
 // 3. Define Connection Function
 async function connectDB() {
@@ -200,7 +199,9 @@ client.on('messageCreate', async message => {
         message.reply(`Indigo Ike's debt to Gucci_Lobster has compounded to $${formattedDebt} 💸 over ${diffDays} days at 2.5% daily interest.`);
     }
 
-    // --- Hey AI command (FINAL VERSION with 50-Message Memory & Self-Reply) ---
+    // --- AI Commands ---
+
+    // --- luna AI command (FINAL VERSION with 20-Message Memory & Self-Reply) ---
     if (message.content.toLowerCase().startsWith('luna ')) {
         // 1. Extract the raw user text (the current prompt)
         const rawPrompt = message.content.slice(5).trim(); 
@@ -299,64 +300,128 @@ client.on('messageCreate', async message => {
         }
     }
 
+    // lunastrat <map> <side> command
+    if (message.content.toLowerCase().startsWith('lunastrat')) {
+        const args = message.content.slice('lunastrat'.length).trim().split(/\s+/);
+
+        if (args.length !== 2) {
+            return message.reply("❌ Usage: `lunastrat <map_name> <side>`. Example: `lunastrat inferno ct`");
+        }
+
+        const map = args[0].toLowerCase();
+        const side = args[1].toLowerCase();
+
+        // Input Validation
+        const validSides = ['t', 'ct', 'terrorist', 'counter-terrorist'];
+        const validMaps = ['mirage', 'inferno', 'nuke', 'vertigo', 'ancient', 'overpass', 'anubis', 'dust2', 'train'];
+
+        if (!validMaps.includes(map)) {
+            return message.reply(`❌ Invalid map. Try one of the current competitive maps: **${validMaps.join(', ')}**, nya.`);
+        }
+
+        if (!validSides.includes(side)) {
+            return message.reply("❌ Invalid side. Must be **T**, **CT**, **Terrorist**, or **Counter-Terrorist**, meow.");
+        }
+        
+        // Normalize side input for the prompt
+        const cleanSide = (side === 't' || side === 'terrorist') ? 'Terrorist (T)' : 'Counter-Terrorist (CT)';
+        const prompt = `Generate a random, concise, and realistic competitive strategy for CS2 on the map ${map} for the ${cleanSide} side. Include a clear name for the strat and mention a few key utility placements (smokes, flashes). Do not include any Neko girl persona in this response.`;
+
+        try {
+            await message.channel.sendTyping();
+
+            // Use the core chat model (gemini-2.5-flash) for speed
+            const response = await clientGemini.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    // Keep the system instruction separate to avoid contamination
+                    systemInstruction: "You are an expert CS2 tactical analyst. Generate a strategy using simple Markdown. The response MUST start with a bold Strategy Name, followed by a brief description, then bulleted lists for Execution and Utility. DO NOT include any introductory or concluding phrases, emojis, external links, or special markdown elements other than bolding and lists.",
+                    temperature: 0.9, // Higher temp encourages random, unique strategies
+                    maxOutputTokens: 1024,
+                },
+            });
+
+            const stratText = response.text;
+
+            if (!stratText) {
+                return message.reply("❌ The strategy server failed to load, nya. Try again.");
+            }
+
+            const replyMessage = 
+    `🎯 **CS2 STRATEGY GENERATOR** 🎯
+    **Map:** ${map.toUpperCase()} | **Side:** ${cleanSide}
+    ---
+    ${stratText}
+    ---
+    Good luck, meow! 😼`;
+
+            message.reply(replyMessage);
+
+        } catch (err) {
+            console.error('--- GEMINI STRAT GENERATOR ERROR ---', err);
+            message.reply(`❌ Strategizing failed due to an API error, nya. Check the console.`);
+        }
+    }
+
     // --- ECONOMY COMMANDS ---
 
-    // !lunachop command
-    if (message.content === '!lunachop') {
-        const userData = await getOrCreateUser(message.author.id);
+        // !lunachop command
+        if (message.content === '!lunachop') {
+            const userData = await getOrCreateUser(message.author.id);
 
-        // Cooldown check (1 second)
-        const cooldown = 1000;
-        const now = Date.now();
-        if (now - userData.lastChop < cooldown) {
-            const timeRemaining = ((userData.lastChop + cooldown - now) / 1000).toFixed(1);
-            return message.reply(`Slow down, meow! You need to wait **${timeRemaining}s** before chopping again!`);
-        }
-        userData.lastChop = now; // Set new cooldown time
+            // Cooldown check (1 second)
+            const cooldown = 1000;
+            const now = Date.now();
+            if (now - userData.lastChop < cooldown) {
+                const timeRemaining = ((userData.lastChop + cooldown - now) / 1000).toFixed(1);
+                return message.reply(`Slow down, meow! You need to wait **${timeRemaining}s** before chopping again!`);
+            }
+            userData.lastChop = now; // Set new cooldown time
 
-        userData.timesChopped += 1;
+            userData.timesChopped += 1;
 
-        // Use the index for the current axe tier
-        const axeInfo = userData.tool_axe || AXE_TIERS[0];
-        const multiplier = axeInfo.multiplier;
-        const axeDisplayName = axeInfo.name;
+            // Use the index for the current axe tier
+            const axeInfo = userData.tool_axe || AXE_TIERS[0];
+            const multiplier = axeInfo.multiplier;
+            const axeDisplayName = axeInfo.name;
 
-        // Logic to determine which wood type is found
-        const roll = Math.random();
-        let cumulativeRarity = 0;
-        let foundWood = null;
+            // Logic to determine which wood type is found
+            const roll = Math.random();
+            let cumulativeRarity = 0;
+            let foundWood = null;
 
-        for (const wood of WOOD_TYPES) {
-            cumulativeRarity += wood.rarity;
-            if (roll <= cumulativeRarity) {
-                foundWood = wood;
-                break;
-            }
-        }
+            for (const wood of WOOD_TYPES) {
+                cumulativeRarity += wood.rarity;
+                if (roll <= cumulativeRarity) {
+                    foundWood = wood;
+                    break;
+                }
+            }
 
-        if (!foundWood) {
-            foundWood = WOOD_TYPES[0]; // Default to Oak if no wood found
-        }
-        
-        // Calculate final drops using the multiplier (always at least 1)
-        const drops = multiplier; 
+            if (!foundWood) {
+            foundWood = WOOD_TYPES[0]; // Default to Oak if no wood found
+            }
+     
+            // Calculate final drops using the multiplier (always at least 1)
+            const drops = multiplier; 
 
-        // Get the item name
-        const itemName = foundWood.name;
+            // Get the item name
+            const itemName = foundWood.name;
 
-        // Calculate the new total count
-        const currentCount = userData.inventory.get(itemName) || 0; // Use .get() to safely read from the Mongoose Map
-        const newCount = currentCount + drops;
+            // Calculate the new total count
+            const currentCount = userData.inventory.get(itemName) || 0; // Use .get() to safely read from the Mongoose Map
+            const newCount = currentCount + drops;
 
-        // Add drops to the user's inventory using .set() to ensure Mongoose tracks the change
-        userData.inventory.set(itemName, newCount);
+            // Add drops to the user's inventory using .set() to ensure Mongoose tracks the change
+            userData.inventory.set(itemName, newCount);
 
-        await userData.save();
-        
-        message.reply(`🪓 **${axeDisplayName}** chop! You found **${drops}x ${foundWood.name}** ${foundWood.emoji}!`);
-    }
+            await userData.save();
+ 
+            message.reply(`🪓 **${axeDisplayName}** chop! You found **${drops}x ${foundWood.name}** ${foundWood.emoji}!`);
+    }
 
-    // --- !lunamine Command ---
+    // --- !lunamine Command ---
     if (message.content.toLowerCase() === '!lunamine') {
         const userData = await getOrCreateUser(message.author.id);
 
@@ -410,7 +475,7 @@ client.on('messageCreate', async message => {
         message.reply(`⛏️ **${currentPickaxe.name}** mine! You found **${amount}x** ${selectedDrop.name} ${selectedDrop.emoji}!`);
     }
 
-    // --- !inv Command ---
+    // --- !inv Command ---
     if (message.content === '!inv') {
         const userData = await getOrCreateUser(message.author.id); 
         
@@ -448,7 +513,7 @@ client.on('messageCreate', async message => {
         message.reply(`💵 Your current balance is **$${userData.balance.toLocaleString()}**.`);
     }
 
-    // !sellall command (Fixed for all items)
+    // !sellall command (Fixed for all items)
     if (message.content === '!sellall') {
         const userData = await getOrCreateUser(message.author.id);
 
@@ -524,7 +589,7 @@ client.on('messageCreate', async message => {
         message.reply(`💰 Sold **${count}x ${itemName}** ${itemFound.emoji} for **$${revenue}**! New Balance: **$${userData.balance.toLocaleString()}**.`);
     }
 
-    // !leaderboard command
+    // !leaderboard command
     if (message.content === '!leaderboard') {
         // Requires client.on('messageCreate', async (message) => { ... }
         
