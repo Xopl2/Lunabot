@@ -141,31 +141,65 @@ function saveEconomyData(data) {
     }
 }
 
-// Helper function to ensure a user exists in the data structure
+// Helper function to ensure a user exists in the data structure and performs deep data cleaning
 function ensureUserExists(userId, data) {
     if (!data.users[userId]) {
-        // Initialize new users with the correct object structure for tools
+        // Initialize new users (Perfectly fine as is)
         data.users[userId] = {
             balance: 0,
             inventory: {},
-            // NEW: Use the starter tool object for consistent tracking
             tool_axe: AXE_TIERS[0],
             tool_pickaxe: PICKAXE_TIERS[0],
-            lastChop: 0, // For cooldown
-            lastMine: 0, // For cooldown
+            lastChop: 0, 
+            lastMine: 0, 
+            timesChopped: 0, 
+            timesMined: 0,
         };
     }
-    // Handle old users (who might have the old currentAxe/currentAxeIndex fields)
+    
     const userData = data.users[userId];
+    const STARTER_AXE = AXE_TIERS[0];
+    const STARTER_PICKAXE = PICKAXE_TIERS[0];
+
+    // 1. BASIC FIELD CHECK: Ensure top-level fields exist for older users
     if (userData.tool_axe === undefined) {
-        // Find the starter tool data to initialize the new fields
-        userData.tool_axe = AXE_TIERS[0];
+        userData.tool_axe = STARTER_AXE;
     }
     if (userData.tool_pickaxe === undefined) {
-        userData.tool_pickaxe = PICKAXE_TIERS[0];
+        userData.tool_pickaxe = STARTER_PICKAXE;
+    }
+    if (userData.timesChopped === undefined) {
+        userData.timesChopped = 0;
+    }
+    if (userData.timesMined === undefined) {
+        userData.timesMined = 0;
     }
 
-    // CRITICAL CLEANUP: Remove the obsolete fields to prevent confusion/errors
+    // 2. DEEP CLEANUP: Find the full constant definition and merge missing properties (like 'emoji')
+
+    // AXE DEEP CLEAN
+    const currentAxeConstant = AXE_TIERS.find(t => t.id === userData.tool_axe.id);
+    if (currentAxeConstant) {
+        // Check every key in the constant (e.g., 'id', 'name', 'multiplier', 'price', 'emoji')
+        Object.keys(currentAxeConstant).forEach(key => {
+            // If the key is missing from the user's saved data, copy it from the constant
+            if (userData.tool_axe[key] === undefined) {
+                userData.tool_axe[key] = currentAxeConstant[key];
+            }
+        });
+    }
+
+    // PICKAXE DEEP CLEAN
+    const currentPickaxeConstant = PICKAXE_TIERS.find(t => t.id === userData.tool_pickaxe.id);
+    if (currentPickaxeConstant) {
+        Object.keys(currentPickaxeConstant).forEach(key => {
+            if (userData.tool_pickaxe[key] === undefined) {
+                userData.tool_pickaxe[key] = currentPickaxeConstant[key];
+            }
+        });
+    }
+
+    // 3. OBSOLETE FIELD CLEANUP (Keep these)
     delete userData.currentAxe;
     delete userData.currentAxeIndex;
     delete userData.currentPickaxe;
@@ -184,8 +218,13 @@ client.on('messageCreate', async message => {
     // Gucci Lobster responder with 1% chance
     const targetUserId = '471040517082447882';
     if (message.author.id === targetUserId) {
-        if (Math.random() < 0.01) { // 1% chance
+        if (Math.random() < 0.1) { // 1% chance
            message.channel.send(`<@${targetUserId}> 🍊🐔`);
+        }
+
+        // 2. 1 in 50 Chance (2% or < 0.02) for GIF
+        if (Math.random() < 0.02) { 
+           message.channel.send("https://tenor.com/view/chicken-wings-wings-food-chicken-wing-gif-26532274");
         }
     }
 
@@ -331,10 +370,12 @@ client.on('messageCreate', async message => {
         }
         userData.lastChop = now; // Set new cooldown time
 
+        userData.timesChopped += 1;
+
         // Use the index for the current axe tier
-        const axeInfo = AXE_TIERS[userData.currentAxeIndex] || AXE_TIERS[0];
-        const multiplier = axeInfo.multiplier;
-        const axeDisplayName = axeInfo.name;
+        const axeInfo = userData.tool_axe || AXE_TIERS[0];
+        const multiplier = axeInfo.multiplier;
+        const axeDisplayName = axeInfo.name;
 
         // Logic to determine which wood type is found
         const roll = Math.random();
@@ -364,24 +405,27 @@ client.on('messageCreate', async message => {
         message.reply(`🪓 **${axeDisplayName}** chop! You found **${drops}x ${foundWood.name}** ${foundWood.emoji}!`);
     }
 
-    // --- !lunamine Command (Fixed) ---
+    // --- !lunamine Command ---
     if (message.content.toLowerCase() === '!lunamine') {
         const userId = message.author.id;
         const data = loadEconomyData();
         ensureUserExists(userId, data);
         const userData = data.users[userId];
 
-        // Cooldown check (1 seconds)
-        const cooldown = 1000;
-        const now = Date.now();
-        if (now - userData.lastMine < cooldown) {
-            const timeRemaining = ((userData.lastMine + cooldown - now) / 1000).toFixed(1);
-            return message.reply(`Slow down, nya! You need to wait **${timeRemaining}s** before mining again!`);
-        }
-        userData.lastMine = now; // Set new cooldown time
+        // Cooldown check (1 seconds)
+        const cooldown = 1000;
+        const now = Date.now();
+        if (now - userData.lastMine < cooldown) {
+            const timeRemaining = ((userData.lastMine + cooldown - now) / 1000).toFixed(1);
+            return message.reply(`Slow down, nya! You need to wait **${timeRemaining}s** before mining again!`);
+        }
+        userData.lastMine = now; // Set new cooldown time
+
+        userData.timesMined += 1;
         
-        // Use the index for the current pickaxe tier
-        const currentPickaxe = PICKAXE_TIERS[userData.currentPickaxeIndex];
+        // NEW: Safely retrieve the current pickaxe object from user data.
+        // Fall back to the Starter Pickaxe (index 0) if the object is missing.
+        const currentPickaxe = userData.tool_pickaxe || PICKAXE_TIERS[0];
         
         // 1. Determine the Drop (Rarity Logic)
         const roll = Math.random(); 
@@ -401,6 +445,7 @@ client.on('messageCreate', async message => {
         }
 
         // 2. Apply Multiplier for Quantity
+        // Now safely read from the 'currentPickaxe' object
         const amount = currentPickaxe.multiplier;
         
         // 3. Update the User's Inventory
@@ -553,6 +598,42 @@ client.on('messageCreate', async message => {
         }).join('\n');
 
         message.reply(`🏆 **Top 10 Degens by Wealth**\n---\n${leaderboardText}`);
+    }
+
+    // !stats command
+    if (message.content === '!stats') {
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const userData = data.users[message.author.id];
+        
+        // 1. Get Leaderboard Rank
+        const sortedUsers = Object.entries(data.users)
+            .map(([id, user]) => ({
+                id,
+                balance: user.balance
+            }))
+            .filter(user => user.balance > 0)
+            .sort((a, b) => b.balance - a.balance);
+            
+        const userRank = sortedUsers.findIndex(u => u.id === message.author.id) + 1;
+        const rankDisplay = userRank > 0 ? `#${userRank}` : 'N/A';
+        
+        // 2. Build the Message (Ensuring no leading whitespace in the literal)
+        // ... inside !stats command ...
+    
+        const statsMessage = 
+        `📊 **${message.author.username}'s Stats** ---\n` +
+        `**💰 Balance:** **$${userData.balance}**\n` +
+        `**🏆 Leaderboard Rank:** ${rankDisplay}\n\n` +
+        `**⛏️ Tool Status**\n` +
+        `Axe: ${userData.tool_axe.emoji} **${userData.tool_axe.name}** (${userData.tool_axe.multiplier}x)\n` +
+        `Pickaxe: ${userData.tool_pickaxe.emoji} **${userData.tool_pickaxe.name}** (${userData.tool_pickaxe.multiplier}x)\n\n` +
+        `**📈 Lifetime Activity**\n` +
+        `Times Chopped: **${userData.timesChopped}**\n` +
+        `Times Mined: **${userData.timesMined}**`;
+
+        message.reply(statsMessage);
+    
     }
 
    // !shop command (Refactored for both Axes and Pickaxes)
@@ -752,6 +833,59 @@ client.on('messageCreate', async message => {
 
         message.reply(`✅ **FORGED SUCCESS!** Used ${summaryText} to create **${outputQuantity}x ${outputItemName}** ${outputEmoji}!`);
     }
+
+    // --- !coinflip <wager> [side] Command ---
+    if (message.content.toLowerCase().startsWith('!coinflip')) {
+        const data = loadEconomyData();
+        ensureUserExists(message.author.id, data);
+        const userData = data.users[message.author.id];
+        
+        const args = message.content.split(/\s+/);
+        const wagerInput = args[1];
+        let chosenSide = args[2] ? args[2].toLowerCase() : null; // Optional side choice
+
+        // 1. Validate Wager
+        const wager = parseInt(wagerInput);
+        if (isNaN(wager) || wager <= 0) {
+            return message.reply("Please specify a valid amount to wager (e.g., `!coinflip 1000 tails`).");
+        }
+        
+        if (wager > userData.balance) {
+            return message.reply(`You only have **$${userData.balance}**! You can't wager **$${wager}**.`);
+        }
+        
+        // 2. Validate Side Choice (Default to a random side if none chosen)
+        const validSides = ['heads', 'tails'];
+        if (!chosenSide || !validSides.includes(chosenSide)) {
+            // Default to a random side if the user didn't specify or specified invalid input
+            chosenSide = Math.random() < 0.5 ? 'heads' : 'tails';
+        }
+
+        // 3. Determine Flip Result
+        const flipResult = Math.random() < 0.5 ? 'heads' : 'tails';
+        const flipEmoji = flipResult === 'heads' ? '👑' : '🪙';
+        
+        let messageText;
+        
+        // 4. Calculate Payout
+        if (flipResult === chosenSide) {
+            // WIN
+            const winnings = wager;
+            userData.balance += winnings;
+            
+            messageText = `🎉 **${message.author.username}** chose **${chosenSide.toUpperCase()}** and the coin landed on **${flipResult.toUpperCase()}**! ${flipEmoji}\n**You win $${winnings}!** Your new balance is **$${userData.balance}**.`;
+        } else {
+            // LOSS
+            userData.balance -= wager;
+            
+            messageText = `💔 **${message.author.username}** chose **${chosenSide.toUpperCase()}** but the coin landed on **${flipResult.toUpperCase()}**! ${flipEmoji}\n**You lost $${wager}.** Your new balance is **$${userData.balance}**.`;
+        }
+
+        // 5. Save and Reply
+        saveEconomyData(data);
+        message.reply(messageText);
+    }
+
 });
 
 // Log in
