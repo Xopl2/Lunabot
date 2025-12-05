@@ -4,3 +4,5 @@
 .DS_Store
 # Dependency folder
 node_modules/
+# .gitignore
+geminikey.json
