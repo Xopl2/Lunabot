@@ -17,6 +17,7 @@ lunastrat  - a command that generates a random cs2 strat based off of the map an
 !leaderboard - view the leaderboard of all lumberjacks
 !stats - display your statistics
 !shop - open the shop for upgrades
+!craft - craft advanced tools
 !buy () - buys an upgrade from the shop
 !forge - a forge for smelting your ores into bars (for upgrades)
 
