@@ -48,19 +48,19 @@ const WOOD_TYPES = [
     { name: "Birch", emoji: "🌲", rarity: 0.1000, price: 25 },     // 10.00% Uncommon
     { name: "Redwood", emoji: "🍁", rarity: 0.0800, price: 50 },    // 8.00% Uncommon
     { name: "Mahogany", emoji: "🪵", rarity: 0.0190, price: 100 },  // 1.90% Rare
-    { name: "Ancient Log", emoji: "🪓", rarity: 0.0007, price: 250 }, // 0.09% Ultra Rare
-    { name: "Ghost log", emoji: "👻", rarity: 0.0002, price: 250 }, // 0.02% Super Rare
+    { name: "Ancient Log", emoji: "🪓", rarity: 0.0007, price: 500 }, // 0.09% Ultra Rare
+    { name: "Ghost log", emoji: "👻", rarity: 0.0002, price: 2000 }, // 0.02% Super Rare
     { name: "Petrified Log", emoji: "💎", rarity: 0.0001, price: 5000 } // 0.01% Legendary
 ];
 
 // Define mining drops and their sell prices (7 TIERS)
 const MINE_DROPS = [
-    { name: "Chunk of Stone", emoji: "🪨", rarity: 0.7870, price: 1 },     // 78.70% (Fills the rest)
-    { name: "Chunk of Coal", emoji: "⚫", rarity: 0.1000, price: 5 },      // 10.00% Common
+    { name: "Chunk of Stone", emoji: "🪨", rarity: 0.7870, price: 5 },     // 78.70% (Fills the rest)
+    { name: "Chunk of Coal", emoji: "⚫", rarity: 0.1000, price: 10 },      // 10.00% Common
     { name: "Chunk of Copper", emoji: "🟠", rarity: 0.0500, price: 15 },     // 5.00% Uncommon
     { name: "Chunk of Iron", emoji: "🔩", rarity: 0.0500, price: 30 },     // 5.00% Uncommon
-    { name: "Chunk of Gold", emoji: "🟡", rarity: 0.0100 , price: 75 },      // 1.00% Rare
-    { name: "Chunk of Cobalt", emoji: "🔵", rarity: 0.0025, price: 200 },   // 0.25% Ultra Rare
+    { name: "Chunk of Gold", emoji: "🟡", rarity: 0.0100 , price: 100 },      // 1.00% Rare
+    { name: "Chunk of Cobalt", emoji: "🔵", rarity: 0.0025, price: 500 },   // 0.25% Ultra Rare
     { name: "Chunk of Adamantite", emoji: "💎", rarity: 0.0005, price: 1000 } // 0.05% Legendary
 ];
 
@@ -109,23 +109,111 @@ const FORGE_RECIPES = [
     }
 ];
 
+//craftable tools
+const RECIPES = {
+
+    // --- TIER 5 ---
+    "cupiron pick": {
+        materials: new Map([
+            ["cupiron bar", 5],
+            ["Mahogany", 10]
+        ]),
+        tier: 5,
+        type: "tool"
+    },
+    "cupiron axe": {
+        materials: new Map([
+            ["cupiron bar", 5],
+            ["Mahogany", 10]
+        ]),
+        tier: 5,
+        type: "tool"
+    },
+
+    // --- TIER 6 ---
+    "fancy pick": {
+        materials: new Map([
+            ["gold bar", 5],
+            ["ancient log", 10]
+        ]),
+        tier: 6,
+        type: "tool"
+    },
+    "fancy axe": {
+        materials: new Map([
+            ["gold bar", 5],
+            ["ancient log", 10]
+        ]),
+        tier: 6,
+        type: "tool"
+    },
+
+    // --- TIER 7 ---
+    "undead pick": {
+        materials: new Map([
+            ["cobalt bar", 5],
+            ["ghost log", 10]
+        ]),
+        tier: 7,
+        type: "tool"
+    },
+    "undead axe": {
+        materials: new Map([
+            ["cobalt bar", 5],
+            ["ghost log", 10]
+        ]),
+        tier: 7,
+        type: "tool"
+    },
+
+    // --- TIER 8 ---
+    "adamantite pick": {
+        materials: new Map([
+            ["adamantite bar", 5],
+            ["petrified log", 10]
+        ]),
+        tier: 8,
+        type: "tool"
+    },
+    "adamantite axe": {
+        materials: new Map([
+            ["adamantite bar", 5],
+            ["petrified log", 10]
+        ]),
+        tier: 8,
+        type: "tool"
+    },
+};
+
 // Combine all sellable items for universal lookup
 const ALL_SELLABLE_ITEMS = [...WOOD_TYPES, ...MINE_DROPS];
 
-// Define Axe Tiers (Starter, Copper, Iron, Steel)
 const AXE_TIERS = [
-    { id: "starter_axe", name: "Starter Axe", multiplier: 1, price: 0, emoji: "🪓" }, 
-    { id: "copper_axe", name: "Copper Axe", multiplier: 2, price: 500, emoji: "🪓🟠" },
-    { id: "iron_axe", name: "Iron Axe", multiplier: 3, price: 2000, emoji: "🪓🔩" },
-    { id: "steel_axe", name: "Steel Axe", multiplier: 5, price: 5000, emoji: "🪓⚙️" }
-]
+    // --- BASIC (BUYABLE) Tiers 1-4 ---
+    { id: "starter_axe", name: "Starter Axe", multiplier: 1, price: 0, emoji: "🪓", tier: 1 }, 
+    { id: "copper_axe", name: "Copper Axe", multiplier: 2, price: 500, emoji: "🪓🟠", tier: 2 },
+    { id: "iron_axe", name: "Iron Axe", multiplier: 3, price: 2000, emoji: "🪓🔩", tier: 3 },
+    { id: "steel_axe", name: "Steel Axe", multiplier: 5, price: 5000, emoji: "🪓⚙️", tier: 4 },
 
-// Define Pickaxe Tiers (Starter, Copper, Iron, Steel)
+    // --- ADVANCED (CRAFTABLE) Tiers 5-8 ---
+    { id: "axe_t5", name: "cupiron axe", multiplier: 7, emoji: "🪓💎", tier: 5 },
+    { id: "axe_t6", name: "fancy axe", multiplier: 9, emoji: "🪓✨", tier: 6 },
+    { id: "axe_t7", name: "undead axe", multiplier: 12, emoji: "🪓💀", tier: 7 },
+    { id: "axe_t8", name: "adamantite axe", multiplier: 15, emoji: "🪓🌌", tier: 8 }
+];
+
 const PICKAXE_TIERS = [
-    { id: "starter_pick", name: "Starter Pick", multiplier: 1, price: 0, emoji: "⛏️" }, 
-    { id: "copper_pick", name: "Copper Pickaxe", multiplier: 2, price: 1000, emoji: "⛏️🟠" },
-    { id: "iron_pick", name: "Iron Pickaxe", multiplier: 3, price: 2500, emoji: "⛏️🔩" },
-    { id: "steel_pick", name: "Steel Pickaxe", multiplier: 5, price: 5000, emoji: "⛏️⚙️" }
+    // --- BASIC (BUYABLE) Tiers 1-4 ---
+    { id: "starter_pick", name: "Starter Pick", multiplier: 1, price: 0, emoji: "⛏️", tier: 1 }, 
+    { id: "copper_pick", name: "Copper Pickaxe", multiplier: 2, price: 1000, emoji: "⛏️🟠", tier: 2 },
+    { id: "iron_pick", name: "Iron Pickaxe", multiplier: 3, price: 2500, emoji: "⛏️🔩", tier: 3 },
+    { id: "steel_pick", name: "Steel Pickaxe", multiplier: 5, price: 5000, emoji: "⛏️⚙️", tier: 4 },
+
+    // --- ADVANCED (CRAFTABLE) Tiers 5-8 ---
+    { id: "pick_t5", name: "cupiron pick", multiplier: 7, emoji: "⛏️💎", tier: 5 },
+    { id: "pick_t6", name: "fancy pick", multiplier: 9, emoji: "⛏️✨", tier: 6 },
+    { id: "pick_t7", name: "undead pick", multiplier: 12, emoji: "⛏️💀", tier: 7 },
+    { id: "pick_t8", name: "adamantite pick", multiplier: 15, emoji: "⛏️🌌", tier: 8 }
 ];
 
 // index.js (Add this function)
@@ -348,15 +436,17 @@ client.on('messageCreate', async message => {
                 return message.reply("❌ The strategy server failed to load, nya. Try again.");
             }
 
-            const replyMessage = 
-    `🎯 **CS2 STRATEGY GENERATOR** 🎯
-    **Map:** ${map.toUpperCase()} | **Side:** ${cleanSide}
+            // FIX: Wrap the entire reply in a Markdown Code Block for clean rendering
+            const finalOutput = 
+    `🎯 CS2 STRATEGY GENERATOR 🎯
+    Map: ${map.toUpperCase()} | Side: ${cleanSide}
     ---
     ${stratText}
     ---
-    Good luck, meow! 😼`;
+    Good luck! 😼`;
 
-            message.reply(replyMessage);
+            // Send the final output wrapped in the code block
+            message.reply(`\`\`\`markdown\n${finalOutput}\n\`\`\``);
 
         } catch (err) {
             console.error('--- GEMINI STRAT GENERATOR ERROR ---', err);
@@ -479,21 +569,24 @@ client.on('messageCreate', async message => {
     if (message.content === '!inv') {
         const userData = await getOrCreateUser(message.author.id); 
         
-        // 1. Convert the Mongoose Map to a standard array of [name, count] pairs
-        const allInventoryEntries = Array.from(userData.inventory.entries()); // <-- CRITICAL FIX
+        // 1. Get the inventory entries from the Mongoose Map
+        const allInventoryEntries = Array.from(userData.inventory.entries());
 
-        // 2. Filter out items where the count is zero or less
+        // 2. Filter out items where the count is zero or less and format
         const invEntries = allInventoryEntries
             .filter(([name, count]) => count > 0)
             .map(([name, count]) => {
                 // Find the item details (for emoji, etc.) from your master lists
-                // Assuming you have a combined list of all items (wood, drops, bars)
                 const ALL_ITEMS = [...WOOD_TYPES, ...MINE_DROPS, ...FORGED_BARS];
                 const item = ALL_ITEMS.find(i => i.name === name);
-
-                // Format the entry for the reply
                 const emoji = item ? item.emoji : '';
-                return `**${count}x** ${name} ${emoji}`;
+
+                // FINAL FIX: Use a fixed separator to create distinct columns.
+                // This sacrifices the exact alignment of the 'x' but guarantees the item names line up.
+                const countString = String(count).toLocaleString();
+                
+                // Format: Count and 'x' are separated from the item name by " - "
+                return `${countString}x - ${name} ${emoji}`;
             });
 
         // 3. Send the response
@@ -502,15 +595,13 @@ client.on('messageCreate', async message => {
         }
 
         const invText = invEntries.join('\n');
-        message.reply(`🎒 **${message.author.username}'s Inventory**\n---\n${invText}`);
-    }
+        
+        // Final Output: Wrapped in Markdown Code Block
+        const finalOutput = `🎒 ${message.author.username}'s Inventory
+    ---
+    ${invText}`;
 
-    // !bal command (Restored)
-    if (message.content === '!bal') {
-        const userData = await getOrCreateUser(message.author.id);
-
-        // Ensure you use .toLocaleString() for clean number formatting
-        message.reply(`💵 Your current balance is **$${userData.balance.toLocaleString()}**.`);
+        message.reply(`\`\`\`markdown\n${finalOutput}\n\`\`\``);
     }
 
     // !sellall command (Fixed for all items)
@@ -589,37 +680,62 @@ client.on('messageCreate', async message => {
         message.reply(`💰 Sold **${count}x ${itemName}** ${itemFound.emoji} for **$${revenue}**! New Balance: **$${userData.balance.toLocaleString()}**.`);
     }
 
-    // !leaderboard command
+   // !leaderboard command
     if (message.content === '!leaderboard') {
-        // Requires client.on('messageCreate', async (message) => { ... }
-        
-        // 1. Query the User model: Let the database handle the sorting and filtering
-        const sortedUsers = await User.find({ balance: { $gt: 0 } }) // Find users where balance is greater than 0
-            .sort({ balance: -1 }) // Sort descending by balance (-1)
+        // 1. Query the User model: Database handles sorting and limiting
+        const sortedUsers = await User.find({ balance: { $gt: 0 } })
+            .sort({ balance: -1 }) // Sort descending by balance
             .limit(10) // Limit to the top 10
-            .select('userId balance'); // Only retrieve the userId and balance fields
+            .select('userId balance'); // Only retrieve ID and balance
 
         if (sortedUsers.length === 0) {
-            return message.reply('The leaderboard is empty! Get to work!');
+            return message.reply('The leaderboard is empty! Get to work, nya!');
         }
 
-        const leaderboardText = sortedUsers.map((user, index) => {
+        // 2. Use Promise.all to fetch all usernames concurrently (much faster and correct!)
+        const leaderboardEntries = await Promise.all(sortedUsers.map(async (user, index) => {
             const rank = index + 1;
             const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '🔹';
             
-            // FIX: Accessing the ID using user.userId to match the schema
-            const username = client.users.cache.get(user.userId)?.username || `User ID: ${user.userId}`;
+            let username;
+            try {
+                // client.users.fetch() returns a Promise
+                const discordUser = await client.users.fetch(user.userId);
+                username = discordUser.username;
+            } catch (e) {
+                // Fallback if the user no longer exists on Discord
+                username = `Unknown User (${user.userId})`;
+            }
             
-            // Also use .toLocaleString() for better display of large numbers
-            return `${rankEmoji} **#${rank}** - ${username}: **$${user.balance.toLocaleString()}**`;
-        }).join('\n');
+            // Return the formatted string for this user
+            // Using two spaces after the rank and username helps maintain alignment in the code block
+            return `${rankEmoji} #${rank}  - ${username}:  $${user.balance.toLocaleString()}`;
+        })); // The await Promise.all() here waits for ALL fetch calls to finish
 
-        message.reply(`🏆 **Top 10 Degens by Wealth**\n---\n${leaderboardText}`);
+        // 3. Join the fully resolved array of strings
+        const leaderboardText = leaderboardEntries.join('\n');
+
+        // FINAL FIX: Wrap the entire output in a Markdown Code Block
+        const finalOutput = `🏆 Top 10 Degens by Wealth
+    ---
+    ${leaderboardText}`;
+
+        message.reply(`\`\`\`markdown\n${finalOutput}\n\`\`\``);
     }
 
     // !stats command
     if (message.content === '!stats') {
         const userData = await getOrCreateUser(message.author.id);
+        
+        // --- FIX 1: Ensure Starter Tools are defined if DB field is null/undefined ---
+        // You MUST define these static objects globally or retrieve them from AXE_TIERS/PICKAXE_TIERS lists
+        // (Assuming AXE_TIERS and PICKAXE_TIERS are available in this scope)
+        const starterAxe = AXE_TIERS.find(t => t.id === 'starter_axe');
+        const starterPick = PICKAXE_TIERS.find(t => t.id === 'starter_pick');
+
+        // Use nullish coalescing (??) to ensure we always have an object.
+        const currentAxe = userData.tool_axe ?? starterAxe;
+        const currentPick = userData.tool_pick ?? starterPick; 
         
         // 1. Get Leaderboard Rank by querying MongoDB
         const higherRankCount = await User.countDocuments({ balance: { $gt: userData.balance } });
@@ -628,85 +744,102 @@ client.on('messageCreate', async message => {
         
         // 2. Build the Message
         
-        // NOTE: Hardcoding the Axe emoji (🪓) here to prevent rendering errors from database conflicts.
-        const axeEmojiDisplay = '🪓'; 
-
+        // Use fixed-width formatting for clean alignment in the code block.
         const statsMessage = 
-        `📊 **${message.author.username}'s Stats** ---\n` +
-        `**💰 Balance:** **$${userData.balance.toLocaleString()}**\n` +
-        `**🏆 Leaderboard Rank:** ${rankDisplay}\n\n` +
-        `**⛏️ Tool Status**\n` +
-        `Axe: ${axeEmojiDisplay} **${userData.tool_axe.name}** (${userData.tool_axe.multiplier}x)\n` +
-        `Pickaxe: ${userData.tool_pickaxe.emoji} **${userData.tool_pickaxe.name}** (${userData.tool_pickaxe.multiplier}x)\n\n` +
-        `**📈 Lifetime Activity**\n` +
-        `Times Chopped: **${userData.timesChopped}**\n` +
-        `Times Mined: **${userData.timesMined}**`;
+        `📊 ${message.author.username}'s Stats 
+    ---
+    💰 Balance:         $${userData.balance.toLocaleString()}
+    🏆 Leaderboard Rank: ${rankDisplay}
 
-        message.reply(statsMessage);
+    ⚒️ Tool Status
+    Axe:    ${currentAxe.name} (${currentAxe.multiplier}x)
+    Pickaxe: ${currentPick.name} (${currentPick.multiplier}x)
 
+    📈 Lifetime Activity
+    Times Chopped: ${userData.timesChopped}
+    Times Mined:   ${userData.timesMined}`;
+
+        // FINAL FIX: Wrap the entire output in a Markdown Code Block
+        message.reply(`\`\`\`markdown\n${statsMessage}\n\`\`\``);
     }
 
-   // !shop command (Refactored for both Axes and Pickaxes)
+   // !shop command (Refactored for Basic/Advanced Display)
     if (message.content.toLowerCase() === '!shop') {
         const userData = await getOrCreateUser(message.author.id);
-        
-        let shopText = '🌲 **Upgrades Shop** ⛏️\n---\n';
-        
-        // --- AXE SHOP SECTION ---
-        // Find the index of the currently equipped axe based on its ID
-        const currentAxeIndex = AXE_TIERS.findIndex(t => t.id === userData.tool_axe.id); 
-        
-        let nextAxe = AXE_TIERS[currentAxeIndex + 1];
-        
-        shopText += '**Axes**\n';
-        AXE_TIERS.forEach((axe, index) => {
-            let status = '';
-            if (index < currentAxeIndex) {
-                status = '✅ OWNED';
-            } else if (index === currentAxeIndex) {
-                status = '✅ EQUIPPED';
-            } else if (index === currentAxeIndex + 1) {
-                status = `💰 $${axe.price}`;
-            } else if (index > currentAxeIndex + 1) {
-                 status = '🔒 LOCKED';
-            } else {
-                status = '✅ OWNED'; // Fallback for Starter tool
-            }
-            // Include emoji in the display
-            shopText += `${axe.emoji} **[${axe.id}] ${axe.name}** | ${axe.multiplier}x Drops | Status: ${status}\n`;
-        });
 
-        // --- PICKAXE SHOP SECTION ---
-        shopText += '\n**Pickaxes**\n';
-        // Find the index of the currently equipped pickaxe based on its ID
-        const currentPickaxeIndex = PICKAXE_TIERS.findIndex(t => t.id === userData.tool_pickaxe.id);
-        
-        let nextPickaxe = PICKAXE_TIERS[currentPickaxeIndex + 1];
+        const starterAxe = AXE_TIERS.find(t => t.id === 'starter_axe');
+        const starterPick = PICKAXE_TIERS.find(t => t.id === 'starter_pick');
 
-        PICKAXE_TIERS.forEach((pick, index) => {
-            let status = '';
-            if (index < currentPickaxeIndex) {
-                status = '✅ OWNED';
-            } else if (index === currentPickaxeIndex) {
-                status = '✅ EQUIPPED';
-            } else if (index === currentPickaxeIndex + 1) {
-                status = `💰 $${pick.price}`;
-            } else if (index > currentPickaxeIndex + 1) {
-                status = '🔒 LOCKED';
-            } else {
-                status = '✅ OWNED'; // Fallback for Starter tool
-            }
-            // Include emoji in the display
-            shopText += `${pick.emoji} **[${pick.id}] ${pick.name}** | ${pick.multiplier}x Drops | Status: ${status}\n`;
-        });
+        // CRITICAL FIX: Ensure the equipped data always has the full 'tier' property
+        const equippedAxeData = AXE_TIERS.find(t => t.id === userData.tool_axe?.id) || starterAxe;
+        const equippedPickData = PICKAXE_TIERS.find(t => t.id === userData.tool_pick?.id) || starterPick;
         
-        // Determine which ID to show for the next example buy command
-        const nextBuyId = (nextAxe || nextPickaxe)?.id || AXE_TIERS[1].id;
-        
-        // Final message
-        shopText += `\nTo purchase an upgrade, use \`!buy <item_id>\` (e.g., \`!buy ${nextBuyId}\`)`;
+        // Helper function to generate shop text for a tool list
+        const generateShopSection = (toolList, currentTool, title, buyable = true) => {
+            let sectionText = `\n--- ${title} ---\n`; 
+            
+            toolList.forEach((tool) => {
+                // Compare IDs from the list (tool.id) to the reliable equipped ID (currentTool.id)
+                const isEquipped = tool.id === currentTool.id;
+                let status = '';
+                
+                if (isEquipped) {
+                    status = '✅ **EQUIPPED**';
+                } else if (buyable && tool.price !== undefined) {
+                    // Logic for Basic (Buyable) tools:
+                    const isNextPurchasable = tool.tier === currentTool.tier + 1;
+                    
+                    if (isNextPurchasable) { 
+                        status = `💰 **$${tool.price.toLocaleString()}** - Use \`!buy ${tool.name}\``;
+                    } else if (tool.tier < currentTool.tier) {
+                        status = '✅ **OWNED**';
+                    } else if (tool.tier > currentTool.tier) {
+                        status = '🔒 **LOCKED**';
+                    }
+                } else if (!buyable && RECIPES[tool.name]) {
+                    // Logic for Advanced (Craftable) tools:
+                    const recipe = RECIPES[tool.name];
+                    const ingredientsList = Array.from(recipe.materials).map(([item, quantity]) => `${quantity}x ${item}`).join(' + ');
+                    
+                    if (isEquipped) {
+                        status = '✅ **EQUIPPED**';
+                    } else {
+                        status = `⚒️ **Requires:** ${ingredientsList} - Use \`!craft ${tool.name}\``;
+                    }
+                } else {
+                    status = '🔒 **LOCKED/ADVANCED**';
+                }
 
-        message.reply(shopText);
+                sectionText += `${tool.emoji} **[T${tool.tier}] ${tool.name}** | ${tool.multiplier}x Drops | ${status}\n`;
+            });
+            return sectionText;
+        };
+
+
+        // ----------------------------------------------------
+        // --- AXE SHOP SECTIONS ---
+        // ----------------------------------------------------
+        
+        const basicAxes = AXE_TIERS.filter(t => t.tier <= 4);
+        const advancedAxes = AXE_TIERS.filter(t => t.tier >= 5);
+        
+        let shopText = '';
+        shopText += generateShopSection(basicAxes, equippedAxeData, '🌲 Basic Axes (Buyable)', true); // Use fixed object
+        shopText += generateShopSection(advancedAxes, equippedAxeData, '🔥 Advanced Axes (Craftable)', false); // Use fixed object
+
+        // ----------------------------------------------------
+        // --- PICKAXE SHOP SECTIONS --- 
+        // ----------------------------------------------------
+
+        const basicPicks = PICKAXE_TIERS.filter(t => t.tier <= 4);
+        const advancedPicks = PICKAXE_TIERS.filter(t => t.tier >= 5);
+        
+        shopText += generateShopSection(basicPicks, equippedPickData, '⛏️ Basic Pickaxes (Buyable)', true); // Use fixed object
+        shopText += generateShopSection(advancedPicks, equippedPickData, '💎 Advanced Pickaxes (Craftable)', false); // Use fixed object
+
+        
+        // FINAL FIX: Wrap the entire output in a Code Block (```)
+        message.reply(`\`\`\`markdown\n${shopText}\`\`\``);
     }
 
     // !buy <tool_id> command (FIXED for consistent ID-based tracking)
@@ -786,9 +919,18 @@ client.on('messageCreate', async message => {
                 const ingredientsList = r.ingredients.map(i => `${i.quantity}x ${i.name}`).join(' + ');
                 const outputItem = FORGED_BARS.find(b => b.name === r.output.name);
                 const outputEmoji = outputItem ? outputItem.emoji : '✨';
-                return `**${r.id}**: ${outputEmoji} ${r.output.quantity}x ${r.output.name} from ${ingredientsList}`;
+                
+                // Format for code block: removing bolding and using clean separators
+                return `${r.id}: ${outputEmoji} ${r.output.quantity}x ${r.output.name} from ${ingredientsList}`;
             }).join('\n');
-            return message.reply(`🔥 **LUNA'S FORGE** 🔥\n---\nTo forge, use \`!forge <recipe_id>\`. Available recipes:\n${recipeList}`);
+            
+            // FIX 1: Wrap the recipe list in a Markdown Code Block
+            const output = `🔥 LUNA'S FORGE 🔥
+    ---
+    To forge, use !forge <recipe_id>. Available recipes:
+    ${recipeList}`;
+            
+            return message.reply(`\`\`\`markdown\n${output}\n\`\`\``);
         }
 
         const recipeInput = args; 
@@ -808,26 +950,30 @@ client.on('messageCreate', async message => {
         // 2. Check ALL required materials (FIXED READ)
         let missingMaterials = [];
         for (const ingredient of requiredIngredients) {
-            // FIX 1: Use .get() to read current count safely
             const currentCount = userData.inventory.get(ingredient.name) || 0;
             if (currentCount < ingredient.quantity) {
-                missingMaterials.push(`**${ingredient.quantity}x ${ingredient.name}** (have ${currentCount})`);
+                // Remove bolding for cleaner look inside the code block
+                missingMaterials.push(`${ingredient.quantity}x ${ingredient.name} (have ${currentCount})`);
             }
         }
         
         if (missingMaterials.length > 0) {
-            return message.reply(`📉 You are missing some materials to fire the forge, meow!:\n${missingMaterials.join('\n')}`);
+            // FIX 2: Wrap the missing materials message in a Markdown Code Block
+            const output = `📉 Missing materials to fire the forge, meow!:
+    ---
+    ${missingMaterials.join('\n')}`;
+            
+            return message.reply(`\`\`\`markdown\n${output}\n\`\`\``);
         }
 
         // 3. SUCCESS: Deduct materials and forge item
         
         let deductionSummary = [];
         for (const ingredient of requiredIngredients) {
-            // Read the current count again (it hasn't changed since the check)
             const currentCount = userData.inventory.get(ingredient.name);
             const newCount = currentCount - ingredient.quantity;
             
-            // FIX 2: Use .set() or .delete() to update the Mongoose Map for deduction
+            // Zero-Cleanup Logic
             if (newCount <= 0) {
                 userData.inventory.delete(ingredient.name);
             } else {
@@ -838,7 +984,6 @@ client.on('messageCreate', async message => {
         }
         
         // Add the forged bar to inventory
-        // FIX 3: Use .get() and .set() for the output item
         const currentBarCount = userData.inventory.get(outputItemName) || 0;
         userData.inventory.set(outputItemName, currentBarCount + outputQuantity);
         
@@ -848,7 +993,103 @@ client.on('messageCreate', async message => {
         const outputEmoji = FORGED_BARS.find(b => b.name === outputItemName)?.emoji || '✨';
         const summaryText = deductionSummary.join(' + ');
 
+        // The success message uses standard markdown
         message.reply(`✅ **FORGED SUCCESS!** Used ${summaryText} to create **${outputQuantity}x ${outputItemName}** ${outputEmoji}! Nya!`);
+    }
+
+    // !craft <tool_name> command (NEW COMMAND FOR ADVANCED TOOLS)
+    if (message.content.toLowerCase().startsWith('!craft')) {
+        const args = message.content.slice('!craft'.length).trim().toLowerCase(); 
+        const toolName = args; 
+        
+        // Display available recipes if no argument is provided
+        if (!args) {
+            // Find all tool recipes (T5-T8 tools should be defined in RECIPES)
+            const toolRecipes = Object.keys(RECIPES).filter(name => RECIPES[name].type === 'tool' && RECIPES[name].tier >= 5);
+            
+            let recipeList = toolRecipes.map(name => {
+                const recipe = RECIPES[name];
+                const ingredientsList = Array.from(recipe.materials).map(([item, quantity]) => `${quantity}x ${item}`).join(' + ');
+                const outputTool = AXE_TIERS.find(t => t.name === name) || PICKAXE_TIERS.find(t => t.name === name);
+                const outputEmoji = outputTool ? outputTool.emoji : '⚒️';
+                
+                // FIX: Add 4 spaces manually to push the entire recipe line over.
+                // This is the attempt to correct the starting alignment.
+                return `    T${recipe.tier} ${outputEmoji} ${name}: Requires ${ingredientsList}`;
+            }).join('\n');
+            
+            // FIX 1: Wrap the recipe list in a Markdown Code Block
+            const output = `🛠️ Advanced Crafting Bench 🛠️
+    ---
+    Available tools (use !craft <tool_name>):
+    ${recipeList}`;
+            
+            return message.reply(`\`\`\`markdown\n${output}\n\`\`\``);
+        }
+
+        // 1. Find the recipe
+        const recipe = RECIPES[toolName];
+        
+        // Ensure it is a tool recipe (T5+) and not a bar recipe
+        if (!recipe || recipe.type !== 'tool' || recipe.tier < 5) {
+            return message.reply(`❌ That item cannot be crafted here. Use \`!craft\` for advanced tools, or \`!forge\` for bars.`);
+        }
+
+        const userData = await getOrCreateUser(message.author.id);
+        const requiredIngredients = recipe.materials;
+        
+        // 2. Check ALL required materials
+        let missingMaterials = [];
+        for (const [ingredientName, quantity] of requiredIngredients) {
+            const currentCount = userData.inventory.get(ingredientName) || 0;
+            if (currentCount < quantity) {
+                // Remove bolding for cleaner look inside the code block
+                missingMaterials.push(`${quantity}x ${ingredientName} (have ${currentCount})`);
+            }
+        }
+        
+        if (missingMaterials.length > 0) {
+            // FIX 2: Wrap the missing materials message in a Markdown Code Block
+            const output = `📉 Missing materials to craft the ${toolName}:
+    ---
+    ${missingMaterials.join('\n')}`;
+            
+            return message.reply(`\`\`\`markdown\n${output}\n\`\`\``);
+        }
+
+        // 3. SUCCESS: Deduct materials and award the tool
+        
+        let deductionSummary = [];
+        for (const [ingredientName, quantity] of requiredIngredients) {
+            const currentCount = userData.inventory.get(ingredientName);
+            const newCount = currentCount - quantity;
+            
+            // Crucial Zero-Cleanup Logic
+            if (newCount <= 0) {
+                userData.inventory.delete(ingredientName);
+            } else {
+                userData.inventory.set(ingredientName, newCount);
+            }
+            
+            deductionSummary.push(`${quantity}x ${ingredientName}`);
+        }
+        
+        // 4. Update the user's tool inventory/equipment
+        const toolTierData = AXE_TIERS.find(t => t.name === toolName) || PICKAXE_TIERS.find(t => t.name === toolName);
+
+        if (toolTierData) {
+            const toolType = toolTierData.name.includes('pick') ? 'tool_pick' : 'tool_axe';
+            userData[toolType] = { id: toolTierData.id, name: toolTierData.name };
+            
+            await userData.save();
+            
+            const outputEmoji = toolTierData.emoji;
+            // The success message uses standard markdown
+            message.reply(`✅ **CRAFTING SUCCESS!** Used ${deductionSummary.join(' + ')} to craft and equip the **${toolName}** ${outputEmoji}! Nya!`);
+        } else {
+            message.reply(`⚠️ Crafting successful, but couldn't equip the tool.`);
+            await userData.save();
+        }
     }
 
     // --- !coinflip <wager> [side] Command ---
