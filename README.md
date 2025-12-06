@@ -4,6 +4,7 @@ luna is an ai powered discord bot
 -- AI commands--
 
 luna - a prefix that gets luna to respond to any prompt you want
+lunastrat  - a command that generates a random cs2 strat based off of the map and side given
 
 -- economy commands -- 
 
