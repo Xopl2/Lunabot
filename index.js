@@ -4,6 +4,9 @@ require('dotenv').config();
 //discord.js import
 const { Client, GatewayIntentBits, Events, PermissionFlagsBits } = require('discord.js');
 
+// 1. Utility Imports
+const { safeReply } = require('./utils');
+
 // 2. Database Imports
 const mongoose = require('mongoose');
 const User = require('./User');
@@ -55,10 +58,10 @@ const WOOD_TYPES = [
 
 // Define mining drops and their sell prices (7 TIERS)
 const MINE_DROPS = [
-    { name: "Chunk of Stone", emoji: "🪨", rarity: 0.7870, price: 5 },     // 78.70% (Fills the rest)
-    { name: "Chunk of Coal", emoji: "⚫", rarity: 0.1000, price: 10 },      // 10.00% Common
-    { name: "Chunk of Copper", emoji: "🟠", rarity: 0.0500, price: 15 },     // 5.00% Uncommon
-    { name: "Chunk of Iron", emoji: "🔩", rarity: 0.0500, price: 30 },     // 5.00% Uncommon
+    { name: "Chunk of Stone", emoji: "🪨", rarity: 0.4870, price: 5 },     // 48.70% (Fills the rest)
+    { name: "Chunk of Coal", emoji: "⚫", rarity: 0.2000, price: 10 },      // 20.00% Common
+    { name: "Chunk of Copper", emoji: "🟠", rarity: 0.1500, price: 15 },     // 15.00% Uncommon
+    { name: "Chunk of Iron", emoji: "🔩", rarity: 0.1500, price: 30 },     // 15.00% Uncommon
     { name: "Chunk of Gold", emoji: "🟡", rarity: 0.0100 , price: 100 },      // 1.00% Rare
     { name: "Chunk of Cobalt", emoji: "🔵", rarity: 0.0025, price: 500 },   // 0.25% Ultra Rare
     { name: "Chunk of Adamantite", emoji: "💎", rarity: 0.0005, price: 1000 } // 0.05% Legendary
@@ -245,25 +248,25 @@ client.on('messageCreate', async message => {
 
     // Ping command
     if (message.content === '!ping') {
-        message.reply('Pong!');      
+        safeReply(message,'Pong!');      
     }
 
     // Gucci Lobster responder with 1% chance
     const targetUserId = '471040517082447882';
     if (message.author.id === targetUserId) {
-        if (Math.random() < 0.1) { // 1% chance
+        if (Math.random() < 0.01) { // 1% chance
            message.channel.send(`<@${targetUserId}> 🍊🐔`);
         }
 
-        // 2. 1 in 50 Chance (2% or < 0.02) for GIF
-        if (Math.random() < 0.02) { 
+        // 2. 1 in 500 Chance (0.2% or < 0.002) for GIF
+        if (Math.random() < 0.002) { 
            message.channel.send("https://tenor.com/view/chicken-wings-wings-food-chicken-wing-gif-26532274");
         }
     }
 
     // Poop command
     if (message.content === '!poop') {
-        message.reply('💩');
+        safeReply(message,'💩');
     }
 
     // indigo ike debt command
@@ -284,7 +287,7 @@ client.on('messageCreate', async message => {
         // Format to 2 decimal places
         const formattedDebt = totalDebt.toFixed(2);
 
-        message.reply(`Indigo Ike's debt to Gucci_Lobster has compounded to $${formattedDebt} 💸 over ${diffDays} days at 2.5% daily interest.`);
+        safeReply(message,`Indigo Ike's debt to Gucci_Lobster has compounded to $${formattedDebt} 💸 over ${diffDays} days at 2.5% daily interest.`);
     }
 
     // --- AI Commands ---
@@ -366,14 +369,14 @@ client.on('messageCreate', async message => {
             // 5. Safety Check and Truncation
             if (!responseText) {
                 console.error('Gemini response blocked:', response.candidates?.[0]?.finishReason);
-                return message.reply(`❌ I couldn't answer that, nya. The response may have been blocked by safety filters.`);
+               return safeReply(message,`❌ I couldn't answer that, nya. The response may have been blocked by safety filters.`);
             }
             
             if (responseText.length > 2000) {
                 const truncatedResponse = responseText.substring(0, 1950) + '\n\n... (Response Truncated to fit Discord limit)';
-                message.reply(truncatedResponse);
+                safeReply(message,truncatedResponse);
             } else {
-                message.reply(responseText);
+                safeReply(message,responseText);
             }
 
         } catch (err) {
@@ -384,7 +387,7 @@ client.on('messageCreate', async message => {
             if (err.message && (err.message.includes('timeout') || err.message.includes('socket hang up'))) {
                 userMessage = '⚠️ The AI took too long to respond and the request timed out. Please try a shorter query, nya.';
             }
-            message.reply(userMessage);
+            safeReply(message,userMessage);
         }
     }
 
@@ -393,7 +396,7 @@ client.on('messageCreate', async message => {
         const args = message.content.slice('lunastrat'.length).trim().split(/\s+/);
 
         if (args.length !== 2) {
-            return message.reply("❌ Usage: `lunastrat <map_name> <side>`. Example: `lunastrat inferno ct`");
+            return safeReply(message,"❌ Usage: `lunastrat <map_name> <side>`. Example: `lunastrat inferno ct`");
         }
 
         const map = args[0].toLowerCase();
@@ -404,11 +407,11 @@ client.on('messageCreate', async message => {
         const validMaps = ['mirage', 'inferno', 'nuke', 'vertigo', 'ancient', 'overpass', 'anubis', 'dust2', 'train'];
 
         if (!validMaps.includes(map)) {
-            return message.reply(`❌ Invalid map. Try one of the current competitive maps: **${validMaps.join(', ')}**, nya.`);
+            return safeReply(message,`❌ Invalid map. Try one of the current competitive maps: **${validMaps.join(', ')}**, nya.`);
         }
 
         if (!validSides.includes(side)) {
-            return message.reply("❌ Invalid side. Must be **T**, **CT**, **Terrorist**, or **Counter-Terrorist**, meow.");
+            return safeReply(message,"❌ Invalid side. Must be **T**, **CT**, **Terrorist**, or **Counter-Terrorist**, meow.");
         }
         
         // Normalize side input for the prompt
@@ -433,7 +436,7 @@ client.on('messageCreate', async message => {
             const stratText = response.text;
 
             if (!stratText) {
-                return message.reply("❌ The strategy server failed to load, nya. Try again.");
+                return safeReply(message,"❌ The strategy server failed to load, nya. Try again.");
             }
 
             // FIX: Wrap the entire reply in a Markdown Code Block for clean rendering
@@ -446,11 +449,60 @@ client.on('messageCreate', async message => {
     Good luck! 😼`;
 
             // Send the final output wrapped in the code block
-            message.reply(`\`\`\`markdown\n${finalOutput}\n\`\`\``);
+            safeReply(message,`\`\`\`markdown\n${finalOutput}\n\`\`\``);
 
         } catch (err) {
             console.error('--- GEMINI STRAT GENERATOR ERROR ---', err);
-            message.reply(`❌ Strategizing failed due to an API error, nya. Check the console.`);
+            safeReply(message,`❌ Strategizing failed due to an API error, nya. Check the console.`);
+        }
+    }
+
+    // --- ai command (No exclamation mark, no personality, no memory, factual) ---
+    if (message.content.toLowerCase().startsWith('ai ')) {
+        // 1. Extract the raw user text
+        const rawPrompt = message.content.slice(3).trim(); 
+
+        if (!rawPrompt) {
+            return safeReply(message, '❌ Please provide a prompt after `ai`.');
+        }
+        
+        try {
+            await message.channel.sendTyping();
+
+            // 2. API CALL
+            const response = await clientGemini.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: rawPrompt, 
+                config: {
+                    // 🔥 FIX: Added System Instruction to constrain output length
+                    systemInstruction: "You are a helpful and factual assistant. Respond directly to the user's query. Your response must be under 1950 characters.",
+                    temperature: 0.1, 
+                    maxOutputTokens: 2048, 
+                },
+                timeout: 60000 
+            });
+
+            const responseText = response.text; 
+
+            // 3. Safety Check and Send Response
+            if (!responseText) {
+                console.error('Gemini response blocked:', response.candidates?.[0]?.finishReason);
+            return safeReply(message,`❌ I couldn't answer that. The response may have been blocked by safety filters.`);
+            }
+            
+            // Safety Fallback: Truncate if the model ignored the instruction (still good practice)
+            if (responseText.length > 1950) {
+                const truncatedResponse = responseText.substring(0, 1900) + '\n\n... (Response Truncated to fit Discord limit)';
+                safeReply(message, truncatedResponse);
+            } else {
+                safeReply(message, responseText); 
+            }
+
+        } catch (err) {
+            console.error('--- GEMINI API / NETWORK ERROR (AI Command) ---');
+            console.error(err);
+            
+            safeReply(message,'❌ Something went wrong with the AI response.');
         }
     }
 
@@ -505,7 +557,7 @@ client.on('messageCreate', async message => {
         const now = Date.now();
         if (now - userData.lastChop < cooldown) {
             const timeRemaining = ((userData.lastChop + cooldown - now) / 1000).toFixed(1);
-            return message.reply(`Slow down, meow! You need to wait **${timeRemaining}s** before chopping again!`);
+            return safeReply(message,`Slow down, meow! You need to wait **${timeRemaining}s** before chopping again!`);
         }
         userData.lastChop = now;
         userData.timesChopped += 1;
@@ -533,7 +585,7 @@ client.on('messageCreate', async message => {
 
         // Send summary
         const dropSummary = buildDropSummary(sessionDrops, WOOD_TYPES);
-        message.reply(`🪓 **${currentAxe.name}** chop! You found ${dropSummary}!`);
+        safeReply(message,`🪓 **${currentAxe.name}** chop! You found ${dropSummary}!`);
     }
 
     // ------------------------- !LUNAMINE -------------------------
@@ -546,7 +598,7 @@ client.on('messageCreate', async message => {
         const now = Date.now();
         if (now - userData.lastMine < cooldown) {
             const timeRemaining = ((userData.lastMine + cooldown - now) / 1000).toFixed(1);
-            return message.reply(`Slow down, nya! You need to wait **${timeRemaining}s** before mining again!`);
+            return safeReply(message,`Slow down, nya! You need to wait **${timeRemaining}s** before mining again!`);
         }
         userData.lastMine = now;
         userData.timesMined += 1;
@@ -575,7 +627,7 @@ client.on('messageCreate', async message => {
 
         // Send summary (unchanged logic)
         const dropSummary = buildDropSummary(sessionDrops, MINE_DROPS);
-        message.reply(`⛏️ **${currentPick.name}** mine! You found ${dropSummary}!`);
+        safeReply(message,`⛏️ **${currentPick.name}** mine! You found ${dropSummary}!`);
     }
 
     // --- !inv Command ---
@@ -604,7 +656,7 @@ client.on('messageCreate', async message => {
 
         // 3. Send the response
         if (invEntries.length === 0) {
-            return message.reply(`🎒 Your inventory is empty! Use \`!lunachop\` or \`!lunamine\` to gather items.`);
+            return safeReply(message,`🎒 Your inventory is empty! Use \`!lunachop\` or \`!lunamine\` to gather items.`);
         }
 
         const invText = invEntries.join('\n');
@@ -614,7 +666,7 @@ client.on('messageCreate', async message => {
     ---
     ${invText}`;
 
-        message.reply(`\`\`\`markdown\n${finalOutput}\n\`\`\``);
+        safeReply(message,`\`\`\`markdown\n${finalOutput}\n\`\`\``);
     }
 
     // !sellall command (Fixed for all items)
@@ -641,7 +693,7 @@ client.on('messageCreate', async message => {
         }
 
         if (totalRevenue === 0) {
-            return message.reply('🤷 You have no items to sell!');
+            return safeReply(message,'🤷 You have no items to sell!');
         }
 
         // Update user's balance
@@ -649,7 +701,7 @@ client.on('messageCreate', async message => {
         await userData.save();
 
         const soldText = soldItems.join('\n');
-        message.reply(`💰 **SOLD ALL!** You earned **$${totalRevenue}**.\n\nItems Sold:\n${soldText}\n\nNew Balance: **$${userData.balance.toLocaleString()}**`);
+        safeReply(message,`💰 **SOLD ALL!** You earned **$${totalRevenue}**.\n\nItems Sold:\n${soldText}\n\nNew Balance: **$${userData.balance.toLocaleString()}**`);
     }
 
     // !sell <item> command (Sells a specific stack of ANY item)
@@ -657,7 +709,7 @@ client.on('messageCreate', async message => {
         const itemToSellInput = message.content.slice(6).trim().toLowerCase(); // Extract the item name
         
         if (!itemToSellInput) {
-            return message.reply('Please specify the item you want to sell (e.g., `!sell oak` or `!sell gold`).');
+            return safeReply(message,'Please specify the item you want to sell (e.g., `!sell oak` or `!sell gold`).');
         }
 
         const userData = await getOrCreateUser(message.author.id);
@@ -669,7 +721,7 @@ client.on('messageCreate', async message => {
         );
         
         if (!itemFound) {
-            return message.reply(`❌ I don't recognize the item **${itemToSellInput}**. Use \`!inv\` to check your inventory, nya.`);
+            return safeReply(message,`❌ I don't recognize the item **${itemToSellInput}**. Use \`!inv\` to check your inventory, nya.`);
         }
 
         // 2. Check inventory count
@@ -678,7 +730,7 @@ client.on('messageCreate', async message => {
         const count = userData.inventory.get(itemName) || 0; 
 
         if (count === 0) {
-            return message.reply(`🤷 You do not have any **${itemName}** to sell.`);
+            return safeReply(message,`🤷 You do not have any **${itemName}** to sell.`);
         }
 
         // 3. Calculate Revenue, Update Balance, and Clear Inventory
@@ -690,7 +742,7 @@ client.on('messageCreate', async message => {
 
         await userData.save();
 
-        message.reply(`💰 Sold **${count}x ${itemName}** ${itemFound.emoji} for **$${revenue}**! New Balance: **$${userData.balance.toLocaleString()}**.`);
+        safeReply(message,`💰 Sold **${count}x ${itemName}** ${itemFound.emoji} for **$${revenue}**! New Balance: **$${userData.balance.toLocaleString()}**.`);
     }
 
    // !leaderboard command
@@ -702,7 +754,7 @@ client.on('messageCreate', async message => {
             .select('userId balance'); // Only retrieve ID and balance
 
         if (sortedUsers.length === 0) {
-            return message.reply('The leaderboard is empty! Get to work, nya!');
+            return safeReply(message,'The leaderboard is empty! Get to work, nya!');
         }
 
         // 2. Use Promise.all to fetch all usernames concurrently (much faster and correct!)
@@ -733,50 +785,48 @@ client.on('messageCreate', async message => {
     ---
     ${leaderboardText}`;
 
-        message.reply(`\`\`\`markdown\n${finalOutput}\n\`\`\``);
+        safeReply(message,`\`\`\`markdown\n${finalOutput}\n\`\`\``);
     }
 
     // !stats command
     if (message.content === '!stats') {
         const userData = await getOrCreateUser(message.author.id);
         
-        // --- FIX 1: Ensure Starter Tools are defined if DB field is null/undefined ---
-        // You MUST define these static objects globally or retrieve them from AXE_TIERS/PICKAXE_TIERS lists
-        // (Assuming AXE_TIERS and PICKAXE_TIERS are available in this scope)
+        // --- Tool Initialization ---
         const starterAxe = AXE_TIERS.find(t => t.id === 'starter_axe');
         const starterPick = PICKAXE_TIERS.find(t => t.id === 'starter_pick');
-
-        // Use nullish coalescing (??) to ensure we always have an object.
         const currentAxe = userData.tool_axe ?? starterAxe;
-        const currentPick = userData.tool_pick ?? starterPick; 
+        const currentPick = userData.tool_pickaxe ?? starterPick; 
         
-        // 1. Get Leaderboard Rank by querying MongoDB
+        // 1. Get Leaderboard Rank
         const higherRankCount = await User.countDocuments({ balance: { $gt: userData.balance } });
         const userRank = higherRankCount + 1;
         const rankDisplay = (userData.balance > 0 || userRank === 1) ? `#${userRank}` : 'N/A';
         
+        // Helper function to pad the tool name for consistent alignment
+        // We will target a shorter width (e.g., 18 characters) and adjust the main line spacing.
+        const padName = (name) => name.padEnd(18); 
+
         // 2. Build the Message
-        
-        // Use fixed-width formatting for clean alignment in the code block.
         const statsMessage = 
         `📊 ${message.author.username}'s Stats 
     ---
-    💰 Balance:         $${userData.balance.toLocaleString()}
-    🏆 Leaderboard Rank: ${rankDisplay}
+    💰 Balance:           $${userData.balance.toLocaleString()}
+    🏆 Leaderboard Rank:  ${rankDisplay}
 
     ⚒️ Tool Status
-    Axe:    ${currentAxe.name} (${currentAxe.multiplier}x)
-    Pickaxe: ${currentPick.name} (${currentPick.multiplier}x)
+    Axe:     ${padName(currentAxe.name)} (${currentAxe.multiplier}x)
+    Pickaxe: ${padName(currentPick.name)} (${currentPick.multiplier}x)
 
     📈 Lifetime Activity
     Times Chopped: ${userData.timesChopped}
     Times Mined:   ${userData.timesMined}`;
 
         // FINAL FIX: Wrap the entire output in a Markdown Code Block
-        message.reply(`\`\`\`markdown\n${statsMessage}\n\`\`\``);
+        safeReply(message,`\`\`\`markdown\n${statsMessage}\n\`\`\``);
     }
 
-   // !shop command (FIXED: Pickaxe reads from tool_pickaxe)
+  // !shop command (FIXED: Pickaxe reads from tool_pickaxe AND displays extraRolls, UNIVERSAL STATUS LOGIC)
     if (message.content.toLowerCase() === '!shop') {
         const userData = await getOrCreateUser(message.author.id);
 
@@ -787,7 +837,7 @@ client.on('messageCreate', async message => {
         const equippedAxeData = AXE_TIERS.find(t => t.id === userData.tool_axe?.id) || starterAxe;
         const equippedPickData = PICKAXE_TIERS.find(t => t.id === userData.tool_pickaxe?.id) || starterPick; 
         
-        // Helper function (left unchanged, as it uses currentTool, which is now equippedPickData)
+        // Helper function to generate shop text for a tool list (FINAL UPDATE)
         const generateShopSection = (toolList, currentTool, title, buyable = true) => {
             let sectionText = `\n--- ${title} ---\n`; 
             
@@ -798,30 +848,29 @@ client.on('messageCreate', async message => {
                 
                 if (isEquipped) {
                     status = '✅ **EQUIPPED**';
-                } else if (buyable && tool.price !== undefined) {
-                    const isNextPurchasable = tool.tier === currentTool.tier + 1;
-                    
-                    if (isNextPurchasable) { 
+                } else if (tool.tier < currentTool.tier) {
+                    // Tool is lower tier than current, so it must be owned.
+                    status = '✅ **OWNED**';
+                } else if (tool.tier === currentTool.tier + 1) {
+                    // Tool is the next upgradeable tier.
+                    if (buyable) {
+                        // Basic Tools: Display price and !buy command
                         status = `💰 **$${tool.price.toLocaleString()}** - Use \`!buy ${commandName}\``;
-                    } else if (tool.tier < currentTool.tier) {
-                        status = '✅ **OWNED**';
-                    } else if (tool.tier > currentTool.tier) {
-                        status = '🔒 **LOCKED**';
-                    }
-                } else if (!buyable && RECIPES[tool.name]) {
-                    const recipe = RECIPES[tool.name];
-                    const ingredientsList = Array.from(recipe.materials).map(([item, quantity]) => `${quantity}x ${item}`).join(' + ');
-                    
-                    if (isEquipped) {
-                        status = '✅ **EQUIPPED**';
                     } else {
+                        // Advanced Tools: Display recipe and !craft command
+                        const recipe = RECIPES[tool.name];
+                        const ingredientsList = Array.from(recipe.materials).map(([item, quantity]) => `${quantity}x ${item}`).join(' + ');
                         status = `⚒️ **Requires:** ${ingredientsList} - Use \`!craft ${commandName}\``;
                     }
                 } else {
-                    status = '🔒 **LOCKED/ADVANCED**';
+                    // Tool is more than one tier higher than the current tool, meaning it is locked.
+                    status = '🔒 **LOCKED**';
                 }
 
-                sectionText += `${tool.emoji} **[T${tool.tier}] ${tool.name}** | ${tool.multiplier}x Drops | ${status}\n`;
+                // Display Extra Rolls (if applicable)
+                const extraRollsInfo = tool.extraRolls > 0 ? ` (+${tool.extraRolls} Extra Roll${tool.extraRolls > 1 ? 's' : ''})` : '';
+                
+                sectionText += `${tool.emoji} **[T${tool.tier}] ${tool.name}** | ${tool.multiplier}x Drops${extraRollsInfo} | ${status}\n`;
             });
             return sectionText;
         };
@@ -843,16 +892,18 @@ client.on('messageCreate', async message => {
         shopText += generateShopSection(advancedPicks, equippedPickData, '💎 Advanced Pickaxes (Craftable)', false);
 
         
-        message.reply(`\`\`\`markdown\n${shopText}\`\`\``);
+        safeReply(message,`\`\`\`markdown\n${shopText}\`\`\``);
     }
 
-    // !buy <tool_id> command (FIXED: Pickaxe save/read uses tool_pickaxe)
+    // !buy <tool_id> command (FIXED: Input normalization for pickaxes)
     if (message.content.toLowerCase().startsWith('!buy ')) {
         const userInput = message.content.slice(5).trim().toLowerCase();
 
-        // --- Input Normalization ---
+        // --- ENHANCED Input Normalization ---
         let userInputId = userInput.replace(/ /g, '_'); 
-        if (userInputId.endsWith('_pickaxe')) userInputId = userInputId.replace('_pickaxe', '_pick');
+        
+        // FIX: Standardize pickaxe name to match the short ID (e.g., "iron_pickaxe" -> "iron_pick")
+        userInputId = userInputId.replace('_pickaxe', '_pick'); 
 
         const userData = await getOrCreateUser(message.author.id);
 
@@ -860,32 +911,40 @@ client.on('messageCreate', async message => {
         let itemToBuy = AXE_TIERS.find(a => a.id === userInputId);
         let itemType = 'Axe';
         let itemTiers = AXE_TIERS;
-        let currentTool = userData.tool_axe || AXE_TIERS[0]; // Axe read is correct
+        let currentTool = userData.tool_axe || AXE_TIERS[0]; 
 
         if (!itemToBuy) {
             itemToBuy = PICKAXE_TIERS.find(p => p.id === userInputId);
             itemType = 'Pickaxe';
             itemTiers = PICKAXE_TIERS;
-            // 🔥 FIX 1: Pickaxe read for current tool uses tool_pickaxe
+            // Pickaxe read for current tool uses tool_pickaxe
             currentTool = userData.tool_pickaxe || PICKAXE_TIERS[0]; 
         }
 
-        if (!itemToBuy) return message.reply('❌ Invalid item ID. Use `!shop` to see available items.');
-
+        if (!itemToBuy) return safeReply(message,'❌ Invalid item ID. Use `!shop` to see available items.');
+        
         // Check progression (logic unchanged)
         const currentIndex = itemTiers.findIndex(t => t.id === currentTool.id);
         const itemIndex = itemTiers.findIndex(t => t.id === itemToBuy.id);
 
-        if (itemIndex === currentIndex) return message.reply(`✅ You already own and are equipped with the **${itemToBuy.name}**!`);
-        if (itemIndex < currentIndex) return message.reply(`✅ You already own a better ${itemType}, the **${itemTiers[currentIndex].name}**!`);
+        if (itemIndex === currentIndex) return safeReply(message,`✅ You already own and are equipped with the **${itemToBuy.name}**!`);
+        if (itemIndex < currentIndex) return safeReply(message,`✅ You already own a better ${itemType}, the **${itemTiers[currentIndex].name}**!`);
+        
+        // Check if the item is too far ahead (T5+ are craftable, so this block only applies to T2-T4)
         if (itemIndex > currentIndex + 1) {
             const requiredItem = itemTiers[currentIndex + 1];
-            return message.reply(`🔒 You must first purchase the **${requiredItem.name}** before buying **${itemToBuy.name}**.`);
+            return safeReply(message,`🔒 You must first purchase the **${requiredItem.name}** before buying **${itemToBuy.name}**.`);
         }
+        
+        // Check if the item is craftable (T5+) - If so, prevent !buy
+        if (itemToBuy.tier >= 5) {
+            return safeReply(message,`🔨 The **${itemToBuy.name}** is an Advanced tool (T5+). It cannot be bought and must be crafted using \`!craft ${itemToBuy.name.toLowerCase().replace(/ /g, '_')}\`, nya!`);
+        }
+
 
         // Check balance (logic unchanged)
         if (userData.balance < itemToBuy.price) {
-            return message.reply(`💵 You need **$${itemToBuy.price.toLocaleString()}** to buy the **${itemToBuy.name}**, but you only have **$${userData.balance.toLocaleString()}**.`);
+            return safeReply(message,`💵 You need **$${itemToBuy.price.toLocaleString()}** to buy the **${itemToBuy.name}**, but you only have **$${userData.balance.toLocaleString()}**.`);
         }
 
         // Deduct money and store full tool object
@@ -893,16 +952,16 @@ client.on('messageCreate', async message => {
         const newToolData = { ...itemToBuy };
         
         if (itemType === 'Axe') {
-            userData.tool_axe = newToolData; // Axe save is correct
+            userData.tool_axe = newToolData; 
         } else if (itemType === 'Pickaxe') {
-            // 🔥 FIX 2: Pickaxe save uses tool_pickaxe
+            // Pickaxe save uses tool_pickaxe
             userData.tool_pickaxe = newToolData; 
         }
 
         await userData.save();
 
         const extraRolls = itemToBuy.extraRolls || 0;
-        message.reply(`🥳 **PURCHASE SUCCESSFUL!** You bought the **${itemToBuy.name}**! Your drops are now **${itemToBuy.multiplier}x**${extraRolls > 0 ? ` (+${extraRolls} extra roll${extraRolls > 1 ? 's' : ''})` : ''}. Current Balance: **$${userData.balance.toLocaleString()}**.`);
+        safeReply(message,`🥳 **PURCHASE SUCCESSFUL!** You bought the **${itemToBuy.name}**! Your drops are now **${itemToBuy.multiplier}x**${extraRolls > 0 ? ` (+${extraRolls} extra roll${extraRolls > 1 ? 's' : ''})` : ''}. Current Balance: **$${userData.balance.toLocaleString()}**.`);
     }
 
 
@@ -927,7 +986,7 @@ client.on('messageCreate', async message => {
     To forge, use !forge <recipe_id>. Available recipes:
     ${recipeList}`;
             
-            return message.reply(`\`\`\`markdown\n${output}\n\`\`\``);
+            return safeReply(message,`\`\`\`markdown\n${output}\n\`\`\``);
         }
 
         const recipeInput = args; 
@@ -937,7 +996,7 @@ client.on('messageCreate', async message => {
         const recipe = FORGE_RECIPES.find(r => r.id === recipeInput);
         
         if (!recipe) {
-            return message.reply(`❌ Invalid forge recipe ID. Use \`!forge\` to see available recipes, nya.`);
+            return safeReply(message,`❌ Invalid forge recipe ID. Use \`!forge\` to see available recipes, nya.`);
         }
 
         const outputItemName = recipe.output.name;
@@ -960,7 +1019,7 @@ client.on('messageCreate', async message => {
     ---
     ${missingMaterials.join('\n')}`;
             
-            return message.reply(`\`\`\`markdown\n${output}\n\`\`\``);
+            return safeReply(message,`\`\`\`markdown\n${output}\n\`\`\``);
         }
 
         // 3. SUCCESS: Deduct materials and forge item
@@ -991,19 +1050,17 @@ client.on('messageCreate', async message => {
         const summaryText = deductionSummary.join(' + ');
 
         // The success message uses standard markdown
-        message.reply(`✅ **FORGED SUCCESS!** Used ${summaryText} to create **${outputQuantity}x ${outputItemName}** ${outputEmoji}! Nya!`);
+        safeReply(message,`✅ **FORGED SUCCESS!** Used ${summaryText} to create **${outputQuantity}x ${outputItemName}** ${outputEmoji}! Nya!`);
     }
 
-    // !craft <tool_name> command (NEW COMMAND FOR ADVANCED TOOLS)
+    // !craft <tool_name> command (FIXED: Saves all required schema fields)
     if (message.content.toLowerCase().startsWith('!craft')) {
-        // ... (unchanged setup code) ...
+        const userData = await getOrCreateUser(message.author.id);
         const args = message.content.slice('!craft'.length).trim().toLowerCase(); 
-        // We need to process the arguments before checking if they exist
-        const toolNameArg = args.replace(/ /g, '_'); // Process user input immediately
+        const toolNameArg = args.replace(/ /g, '_'); 
         
         // Display available recipes if no argument is provided
         if (!args) {
-            // Find all tool recipes (T5-T8 tools should be defined in RECIPES)
             const toolRecipes = Object.keys(RECIPES).filter(name => RECIPES[name].type === 'tool' && RECIPES[name].tier >= 5);
             
             let recipeList = toolRecipes.map(name => {
@@ -1012,77 +1069,82 @@ client.on('messageCreate', async message => {
                 const outputTool = AXE_TIERS.find(t => t.name === name) || PICKAXE_TIERS.find(t => t.name === name);
                 const outputEmoji = outputTool ? outputTool.emoji : '⚒️';
                 
-                // FIX 1: Create command name with underscores for the display
                 const commandName = name.replace(/ /g, '_'); 
                 
-                return `    T${recipe.tier} ${outputEmoji} ${name}: Requires ${ingredientsList} - Use \`!craft ${commandName}\``; // <-- ADDED COMMAND HERE
+                return `    T${recipe.tier} ${outputEmoji} ${name}: Requires ${ingredientsList} - Use \`!craft ${commandName}\``;
             }).join('\n');
             
-            // FIX 2: Removed manual spaces from recipeList and added a clean header
             const output = `🛠️ Advanced Crafting Bench 🛠️
-    ---
-    Available tools (use !craft <tool_name>):
-    ${recipeList}`;
+       ---
+       Available tools (use !craft <tool_name>):
+       ${recipeList}`;
             
-            return message.reply(`\`\`\`markdown\n${output}\n\`\`\``);
+            return safeReply(message,`\`\`\`markdown\n${output}\n\`\`\``);
         }
 
         // 2. Find the recipe based on the standardized input
-        // The user input must match the key in RECIPES, which currently has spaces.
-        // If you want the user to type 'cupiron_axe' and match 'cupiron axe', we must revert the underscore
-        // OR we must change RECIPES keys to use underscores.
-
-        // Assuming RECIPES keys use spaces (e.g., 'cupiron axe'), but user inputs 'cupiron_axe':
         const recipeKey = toolNameArg.replace(/_/g, ' '); // Revert underscore to space for lookup
         const recipe = RECIPES[recipeKey];
         
-        // Ensure it is a tool recipe (T5+) and not a bar recipe
         if (!recipe || recipe.type !== 'tool' || recipe.tier < 5) {
-            return message.reply(`❌ That item cannot be crafted here. Use \`!craft\` for advanced tools, or \`!forge\` for bars.`);
+            return safeReply(message,`❌ That item cannot be crafted here. Use \`!craft\` for advanced tools, or \`!forge\` for bars.`);
         }
 
-        // ... (rest of the logic remains largely the same, but use 'recipeKey' for tool name lookup) ...
-        
-        const userData = await getOrCreateUser(message.author.id);
         const requiredIngredients = recipe.materials;
         
         // 2. Check ALL required materials
         let missingMaterials = [];
         for (const [ingredientName, quantity] of requiredIngredients) {
-            // ... (check logic remains the same) ...
+            const currentQty = userData.inventory.get(ingredientName) || 0;
+            if (currentQty < quantity) {
+                missingMaterials.push(`- Missing ${quantity - currentQty}x ${ingredientName}`);
+            }
         }
         
         if (missingMaterials.length > 0) {
-            // FIX 3: Reference the clean name (recipeKey) for the error message
             const output = `📉 Missing materials to craft the ${recipeKey}:
-    ---
-    ${missingMaterials.join('\n')}`;
+       ---
+       ${missingMaterials.join('\n')}`;
             
-            return message.reply(`\`\`\`markdown\n${output}\n\`\`\``);
+            return safeReply(message,`\`\`\`markdown\n${output}\n\`\`\``);
         }
 
         // 3. SUCCESS: Deduct materials and award the tool
-        
         let deductionSummary = [];
         for (const [ingredientName, quantity] of requiredIngredients) {
-            // ... (deduction logic remains the same) ...
+            const current = userData.inventory.get(ingredientName) || 0;
+            userData.inventory.set(ingredientName, current - quantity);
+            deductionSummary.push(`${quantity}x ${ingredientName}`);
         }
         
+        userData.markModified('inventory'); // Ensure inventory map changes are saved
+
         // 4. Update the user's tool inventory/equipment
-        // We must use the key with spaces (recipeKey) to find the correct data in AXE_TIERS/PICKAXE_TIERS
         const toolTierData = AXE_TIERS.find(t => t.name === recipeKey) || PICKAXE_TIERS.find(t => t.name === recipeKey);
 
         if (toolTierData) {
-            const toolType = toolTierData.name.includes('pick') ? 'tool_pick' : 'tool_axe';
-            userData[toolType] = { id: toolTierData.id, name: toolTierData.name };
+            // 🔥 FIX 1: Use 'tool_pickaxe' to match the Mongoose Schema
+            const toolType = toolTierData.name.includes('pick') ? 'tool_pickaxe' : 'tool_axe';
+            
+            // 🔥 FIX 2: Save the FULL required data structure (including multiplier)
+            const newToolData = { 
+                id: toolTierData.id, 
+                name: toolTierData.name,
+                multiplier: toolTierData.multiplier, 
+                extraRolls: toolTierData.extraRolls || 0,
+                emoji: toolTierData.emoji 
+                // Note: We only save fields defined in ToolSchema
+            };
+
+            userData[toolType] = newToolData;
             
             await userData.save();
             
             const outputEmoji = toolTierData.emoji;
-            // The success message uses the clean name (recipeKey)
-            message.reply(`✅ **CRAFTING SUCCESS!** Used ${deductionSummary.join(' + ')} to craft and equip the **${recipeKey}** ${outputEmoji}! Nya!`);
+            safeReply(message,`✅ **CRAFTING SUCCESS!** Used ${deductionSummary.join(' + ')} to craft and equip the **${recipeKey}** ${outputEmoji}! Nya!`);
         } else {
-            message.reply(`⚠️ Crafting successful, but couldn't equip the tool.`);
+            // Fallback save in case the tool isn't found in tiers (shouldn't happen)
+            safeReply(message,`⚠️ Crafting successful, but couldn't equip the tool.`);
             await userData.save();
         }
     }
@@ -1098,11 +1160,11 @@ client.on('messageCreate', async message => {
         // 1. Validate Wager
         const wager = parseInt(wagerInput);
         if (isNaN(wager) || wager <= 0) {
-            return message.reply("Please specify a valid amount to wager (e.g., `!coinflip 1000 tails`).");
+            return safeReply(message,"Please specify a valid amount to wager (e.g., `!coinflip 1000 tails`).");
         }
         
         if (wager > userData.balance) {
-            return message.reply(`You only have **$${userData.balance}**! You ca...`); // This is where your code stopped
+            return safeReply(message,`You only have **$${userData.balance}**! You ca...`); // This is where your code stopped
         }
         
         // --- ADD REST OF COINFLIP LOGIC HERE ---
@@ -1133,7 +1195,7 @@ client.on('messageCreate', async message => {
         await userData.save();
         
         replyText += `\nNew Balance: **$${userData.balance}**!`;
-        message.reply(replyText);
+        safeReply(message,replyText);
     }
 
 });
