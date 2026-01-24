@@ -1,5 +1,5 @@
 # Lunabot
-luna is an ai powered discord bot
+AI powered discord bot
 
 -- AI commands--
 
