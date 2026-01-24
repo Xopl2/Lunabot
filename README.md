@@ -1,6 +1,8 @@
 # Lunabot
 AI powered discord bot
 
+!help - for a list of commands
+
 -- AI commands--
 
 luna - a prefix that gets luna to respond to any prompt you want
